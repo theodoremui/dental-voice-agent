@@ -1,5 +1,5 @@
-agent_name = "bright-smile-dental"
-secret_set = "bright-smile-dental-secrets"
+agent_name = "dental-bot"
+secret_set = "dental-bot-secrets"
 agent_profile = "agent-1x"
 
 [krisp_viva]

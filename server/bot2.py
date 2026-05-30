@@ -201,6 +201,9 @@ def _extract_name(text: str) -> str | None:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             return match.group(1).strip()
+    bare_name = re.fullmatch(r"\s*([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\.?\s*", text)
+    if bare_name:
+        return bare_name.group(1).strip()
     return None
 
 
