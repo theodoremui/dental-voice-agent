@@ -1,0 +1,96 @@
+{
+  "run_id": "9c8cff0d",
+  "timestamp": 1780179463.622189,
+  "timestamp_iso": "2026-05-30T22:17:43Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 1,
+  "failed_count": 0,
+  "pass_rate": 1.0,
+  "voice_p95_latency_ms": 812,
+  "voice_latency": {
+    "ttfa_p95_ms": 812,
+    "ttla_p95_ms": 11710
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "relative_date_this_friday",
+      "passed": true,
+      "reason": "Agent asked for and used the caller\u2011provided date for this Friday, showing it interpreted the relative\u2011date context.",
+      "turn_count": 11,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I'd like to schedule a dental check\u2011up for this Friday afternoon, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "Sure, I can help with that. Could you confirm the date for this Friday and let me know your name and preferred afternoon time?"
+        },
+        {
+          "speaker": "caller",
+          "text": "My name is Alex\u202fKim, and I\u2019d like to schedule a dental check\u2011up for Friday, June\u202f5th in the afternoon, preferably around 2\u202fPM."
+        },
+        {
+          "speaker": "agent",
+          "text": "May I have your name please?"
+        },
+        {
+          "speaker": "caller",
+          "text": "My name is Alex\u202fKim."
+        },
+        {
+          "speaker": "agent",
+          "text": "Thanks, Alex. Just to confirm this Friday would be"
+        },
+        {
+          "speaker": "caller",
+          "text": "Yes, that\u2019s correct\u2014Friday, June\u202f5th at 2\u202fPM works for me. Thank"
+        },
+        {
+          "speaker": "agent",
+          "text": "Um, I'm sorry two point zero PM is not available. We have openings at one point zero PM, two point thirty PM, and four point zero PM. Would any of those work for you?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Sure, 2:30\u202fPM works for me. Thank you, goodbye."
+        },
+        {
+          "speaker": "agent",
+          "text": "I'm sorry, two point zero PM isn't available this Friday."
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7870",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7870",
+    "port": 7870,
+    "command": "uv run bot1.py --host localhost --port 7870",
+    "batch_id": "20260530T221507Z-7a5a9044"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "run_id": "dfdf07ad",
+  "timestamp": 1780179908.766549,
+  "timestamp_iso": "2026-05-30T22:25:08Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": 360,
+  "voice_latency": {
+    "ttfa_p95_ms": 360,
+    "ttla_p95_ms": 1682
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "happy_booking_cavity_followup",
+      "passed": false,
+      "reason": "Voice eval failed before judging: InvalidStateError: ",
+      "turn_count": 10,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I\u2019d like to schedule a cavity follow\u2011up for June\u202f4,\u202f2026 at 1\u202fPM, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "May I have your name please"
+        },
+        {
+          "speaker": "caller",
+          "text": "My name is Priya Shah."
+        },
+        {
+          "speaker": "agent",
+          "text": "I can schedule a cavity follow up for June fourth."
+        },
+        {
+          "speaker": "caller",
+          "text": "Yes, please schedule it for June\u202f4,\u202f2026 at 1\u202fPM. Thank you."
+        },
+        {
+          "speaker": "agent",
+          "text": "Your appointment is confirmed pre assure you have a"
+        },
+        {
+          "speaker": "caller",
+          "text": "Thank you, Aria. The appointment is set for June\u202f4 at 1"
+        },
+        {
+          "speaker": "agent",
+          "text": "Your appointment is confirmed for"
+        },
+        {
+          "speaker": "caller",
+          "text": "Thank you, Aria\u2014I\u2019ve confirmed the appointment for June\u202f4,\u202f2026 at 1\u202fPM. Have a great day!"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high",
+      "infrastructure_failure": true,
+      "error_type": "InvalidStateError"
+    }
+  ],
+  "bot_url": "http://localhost:7868",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7868",
+    "port": 7868,
+    "command": "uv run bot1.py --host localhost --port 7868",
+    "batch_id": "20260530T222212Z-9ded4a20"
+  }
+}

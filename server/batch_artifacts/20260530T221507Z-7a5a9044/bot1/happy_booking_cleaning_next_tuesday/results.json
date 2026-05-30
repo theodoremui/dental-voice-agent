@@ -1,0 +1,64 @@
+{
+  "run_id": "7d99eff3",
+  "timestamp": 1780179372.8172648,
+  "timestamp_iso": "2026-05-30T22:16:12Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": 496,
+  "voice_latency": {
+    "ttfa_p95_ms": 496,
+    "ttla_p95_ms": 2975
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "happy_booking_cleaning_next_tuesday",
+      "passed": false,
+      "reason": "The agent did not check availability, collect the needed details, confirm the booking, or provide a confirmation ID in the transcript.",
+      "turn_count": 3,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, this is Maria Lopez. I\u2019d like to schedule a routine cleaning for next Tuesday afternoon, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "Hello, how can I assist you today"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7867",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7867",
+    "port": 7867,
+    "command": "uv run bot1.py --host localhost --port 7867",
+    "batch_id": "20260530T221507Z-7a5a9044"
+  }
+}

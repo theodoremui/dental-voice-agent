@@ -10,6 +10,8 @@ import asyncio
 import json
 import time
 from collections.abc import AsyncGenerator
+from typing import Any
+from urllib.parse import urlsplit
 
 import websockets
 from loguru import logger
@@ -30,6 +32,11 @@ from pipecat.processors.frame_processor import FrameDirection
 from pipecat.services.settings import STTSettings
 from pipecat.services.stt_service import WebsocketSTTService
 from pipecat.utils.time import time_now_iso8601
+
+
+def _safe_endpoint_parts(url: str) -> tuple[str, str, int | None]:
+    parsed = urlsplit(url)
+    return parsed.scheme or "ws", parsed.hostname or "unknown", parsed.port
 
 
 def _strip_committed_prefix(interim_text: str, committed_count: int) -> str | None:
@@ -126,7 +133,7 @@ class NVidiaWebSocketSTTService(WebsocketSTTService):
         self._preroll_seconds = preroll_seconds
         self._ws_ping_interval = ws_ping_interval
         self._ws_ping_timeout = ws_ping_timeout
-        self._websocket = None
+        self._websocket: Any | None = None
         self._receive_task: asyncio.Task | None = None
         self._ready = False
         self._committed_token_count: int = 0
@@ -211,7 +218,9 @@ class NVidiaWebSocketSTTService(WebsocketSTTService):
         await super().cancel(frame)
         await self._disconnect()
 
-    async def run_stt(self, audio: bytes) -> AsyncGenerator[Frame, None]:
+    async def run_stt(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self, audio: bytes
+    ) -> AsyncGenerator[Frame | None, None]:
         """Send audio data to NVIDIA ASR server for transcription.
 
         Args:
@@ -239,12 +248,8 @@ class NVidiaWebSocketSTTService(WebsocketSTTService):
         if self._muted:
             return
 
-        # UserAudioRawFrame contains a user_id (e.g. Daily, Livekit)
-        if hasattr(frame, "user_id"):
-            self._user_id = frame.user_id
-        # AudioRawFrame does not have a user_id (e.g. SmallWebRTCTransport, websockets)
-        else:
-            self._user_id = ""
+        # UserAudioRawFrame contains a user_id; plain AudioRawFrame does not.
+        self._user_id = str(getattr(frame, "user_id", ""))
 
         self._last_audio_time = time.monotonic()
 
@@ -335,7 +340,7 @@ class NVidiaWebSocketSTTService(WebsocketSTTService):
                     await self._websocket.send(json.dumps({"type": "reset", "finalize": finalize}))
                     # Log inside lock to get accurate byte count
                     samples = self._audio_bytes_sent // 2
-                    duration_ms = (samples * 1000) // 16000
+                    duration_ms = (samples * 1000) // self.sample_rate
                     reset_type = "hard" if finalize else "soft"
                     logger.debug(f"{self} sent {reset_type} reset (audio: {duration_ms}ms)")
                     if finalize:
@@ -345,7 +350,8 @@ class NVidiaWebSocketSTTService(WebsocketSTTService):
 
     async def _connect(self):
         """Connect to the NVIDIA ASR service."""
-        logger.debug(f"{self} connecting to {self._url}")
+        scheme, host, port = _safe_endpoint_parts(self._url)
+        logger.info(f"{self} ASR endpoint scheme={scheme} host={host} port={port}")
         await self._connect_websocket()
 
         # Start receive task
@@ -378,6 +384,9 @@ class NVidiaWebSocketSTTService(WebsocketSTTService):
         defaults match websockets 15.0.1, so behavior is unchanged; the
         explicit params are for belt-and-suspenders discoverability.
         """
+        scheme, host, port = _safe_endpoint_parts(self._url)
+        started_at = time.monotonic()
+
         try:
             self._websocket = await websockets.connect(
                 self._url,
@@ -404,6 +413,26 @@ class NVidiaWebSocketSTTService(WebsocketSTTService):
             self._user_speaking = False
             self._audio_ring.clear()
             self._audio_bytes_sent = 0
+
+            elapsed = time.monotonic() - started_at
+            if elapsed > 1.0:
+                logger.warning(
+                    "{} ASR connect/ready took {:.3f}s host={} port={} scheme={}",
+                    self,
+                    elapsed,
+                    host,
+                    port,
+                    scheme,
+                )
+            else:
+                logger.info(
+                    "{} ASR connect/ready took {:.3f}s host={} port={} scheme={}",
+                    self,
+                    elapsed,
+                    host,
+                    port,
+                    scheme,
+                )
 
         except Exception as e:
             logger.error(f"{self} connection failed: {e}")

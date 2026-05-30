@@ -1,0 +1,88 @@
+{
+  "run_id": "e06e8dfe",
+  "timestamp": 1780179942.848264,
+  "timestamp_iso": "2026-05-30T22:25:42Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 1,
+  "failed_count": 0,
+  "pass_rate": 1.0,
+  "voice_p95_latency_ms": 5367,
+  "voice_latency": {
+    "ttfa_p95_ms": 5367,
+    "ttla_p95_ms": 11009
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "relative_date_this_friday",
+      "passed": true,
+      "reason": "The agent confirmed the appointment for 'this Friday, June fifth' showing it interpreted the relative date correctly.",
+      "turn_count": 9,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I\u2019d like to schedule a dental check\u2011up for this Friday afternoon, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "What time this Friday afternoon would work for you?"
+        },
+        {
+          "speaker": "caller",
+          "text": "How about 2:00\u202fPM this Friday?"
+        },
+        {
+          "speaker": "agent",
+          "text": "May I have your name for the appointment?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Sure, it\u2019s Alex\u202fKim."
+        },
+        {
+          "speaker": "agent",
+          "text": "Just to confirm, you'd like this Friday, June fifth at two pm for a dental check up"
+        },
+        {
+          "speaker": "caller",
+          "text": "Yes, that\u2019s correct\u2014Friday, June\u202f5th at 2:00\u202fPM for a check\u2011up. Thank you!  \nGoodbye."
+        },
+        {
+          "speaker": "agent",
+          "text": "I've checked for this Friday, June."
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7869",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7869",
+    "port": 7869,
+    "command": "uv run bot1.py --host localhost --port 7869",
+    "batch_id": "20260530T222212Z-9ded4a20"
+  }
+}

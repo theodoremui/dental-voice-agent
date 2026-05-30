@@ -1,0 +1,721 @@
+{
+  "batch_id": "20260530T222212Z-9ded4a20",
+  "timestamp": 1780179732.017477,
+  "timestamp_iso": "2026-05-30T22:22:12Z",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "bot_count": 2,
+  "scenario_count": 5,
+  "task_count": 10,
+  "max_workers": 4,
+  "passed_count": 1,
+  "pass_rate": 0.1,
+  "wall_time_s": 223.802,
+  "bot_order": [
+    "bot2",
+    "bot1"
+  ],
+  "scenario_order": [
+    "happy_booking_cleaning_next_tuesday",
+    "happy_booking_new_patient_friday",
+    "happy_booking_cavity_followup",
+    "relative_date_this_friday",
+    "relative_date_next_monday"
+  ],
+  "bots": {
+    "bot2": {
+      "batch_id": "20260530T222212Z-9ded4a20",
+      "timestamp": 1780179732.017477,
+      "timestamp_iso": "2026-05-30T22:22:12Z",
+      "judge_policy": {
+        "version": "answer-present-v1",
+        "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+      },
+      "bot_id": "bot2",
+      "bot_name": "bot2",
+      "bot_path": "bot2.py",
+      "bot_resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+      "bot_sha256": "97a5e3ec853ebd61af87add6bddcf1afd6f7e3d61b2a1d560de10a8ff932aec9",
+      "scenario_count": 5,
+      "passed_count": 0,
+      "pass_rate": 0.0,
+      "judge_error_count": 0,
+      "infrastructure_failure_count": 0,
+      "voice_latency": {
+        "completed_turns": 2,
+        "ttfa_p50_ms": 1081,
+        "ttfa_p95_ms": 1464,
+        "ttla_p50_ms": 2963,
+        "ttla_p95_ms": 3264
+      },
+      "voice_p95_latency_ms": 1464,
+      "wall_time_s": 341.568,
+      "artifact_dirs": [
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday"
+      ],
+      "artifact_paths": {
+        "results": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/results.json"
+        ],
+        "runs": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/runs.jsonl"
+        ],
+        "latency": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/latency.jsonl"
+        ],
+        "bot_log": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/bot.log"
+        ],
+        "eval_log": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/eval.log"
+        ]
+      },
+      "scenarios": [
+        {
+          "id": "happy_booking_cleaning_next_tuesday",
+          "passed": false,
+          "reason": "The agent only greeted the caller and did not check availability, collect the needed details, book the cleaning, or provide a confirmation ID.",
+          "turn_count": 2,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi, I'd like to schedule a routine cleaning for next Tuesday afternoon, please."
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7863",
+          "port": 7863,
+          "run_id": "441ccb6e",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot2",
+            "passed_path": "bot2.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+            "sha256": "97a5e3ec853ebd61af87add6bddcf1afd6f7e3d61b2a1d560de10a8ff932aec9",
+            "bot_url": "http://localhost:7863",
+            "port": 7863,
+            "command": "uv run bot2.py --host localhost --port 7863",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cleaning_next_tuesday/eval.log"
+          },
+          "infrastructure_failure": false
+        },
+        {
+          "id": "happy_booking_new_patient_friday",
+          "passed": false,
+          "reason": "The agent did not indicate that the appointment was booked or provide a confirmation ID after the caller's request.",
+          "turn_count": 2,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi Aria, I'm Devin Carter, a new patient. I'd like to schedule a first visit this Friday at 2:30\u202fPM because I've been experiencing tooth sensitivity."
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7860",
+          "port": 7860,
+          "run_id": "6496b052",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot2",
+            "passed_path": "bot2.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+            "sha256": "97a5e3ec853ebd61af87add6bddcf1afd6f7e3d61b2a1d560de10a8ff932aec9",
+            "bot_url": "http://localhost:7860",
+            "port": 7860,
+            "command": "uv run bot2.py --host localhost --port 7860",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_new_patient_friday/eval.log"
+          },
+          "infrastructure_failure": false
+        },
+        {
+          "id": "happy_booking_cavity_followup",
+          "passed": false,
+          "reason": "The agent did not confirm the cavity follow\u2011up booking or provide a confirmation ID for the requested date and time.",
+          "turn_count": 2,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi Aria, I\u2019d like to schedule a cavity follow\u2011up for June\u202f4,\u202f2026 at 1\u202fPM, please."
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7864",
+          "port": 7864,
+          "run_id": "121b495b",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot2",
+            "passed_path": "bot2.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+            "sha256": "97a5e3ec853ebd61af87add6bddcf1afd6f7e3d61b2a1d560de10a8ff932aec9",
+            "bot_url": "http://localhost:7864",
+            "port": 7864,
+            "command": "uv run bot2.py --host localhost --port 7864",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/happy_booking_cavity_followup/eval.log"
+          },
+          "infrastructure_failure": false
+        },
+        {
+          "id": "relative_date_this_friday",
+          "passed": false,
+          "reason": "Agent did not interpret or mention this Friday relative to the eval date; no relative-date context was used.",
+          "turn_count": 4,
+          "transcript": [
+            {
+              "speaker": "caller",
+              "text": "Hi, I'd like to schedule a check\u2011up"
+            },
+            {
+              "speaker": "agent",
+              "text": "Sure, may I have your name please"
+            },
+            {
+              "speaker": "caller",
+              "text": "My name is Alex Kim."
+            },
+            {
+              "speaker": "agent",
+              "text": "What date would you like for your check up"
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7861",
+          "port": 7861,
+          "run_id": "f0a89da4",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot2",
+            "passed_path": "bot2.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+            "sha256": "97a5e3ec853ebd61af87add6bddcf1afd6f7e3d61b2a1d560de10a8ff932aec9",
+            "bot_url": "http://localhost:7861",
+            "port": 7861,
+            "command": "uv run bot2.py --host localhost --port 7861",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_this_friday/eval.log"
+          },
+          "infrastructure_failure": false
+        },
+        {
+          "id": "relative_date_next_monday",
+          "passed": false,
+          "reason": "Agent did not address the request for next Monday at 4\u202fPM or indicate any action taken.",
+          "turn_count": 2,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi, I\u2019d like to schedule an appointment for a chipped filling next Monday at 4\u202fPM, please."
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7865",
+          "port": 7865,
+          "run_id": "31c65e53",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot2",
+            "passed_path": "bot2.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+            "sha256": "97a5e3ec853ebd61af87add6bddcf1afd6f7e3d61b2a1d560de10a8ff932aec9",
+            "bot_url": "http://localhost:7865",
+            "port": 7865,
+            "command": "uv run bot2.py --host localhost --port 7865",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot2/relative_date_next_monday/eval.log"
+          },
+          "infrastructure_failure": false
+        }
+      ]
+    },
+    "bot1": {
+      "batch_id": "20260530T222212Z-9ded4a20",
+      "timestamp": 1780179732.017477,
+      "timestamp_iso": "2026-05-30T22:22:12Z",
+      "judge_policy": {
+        "version": "answer-present-v1",
+        "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+      },
+      "bot_id": "bot1",
+      "bot_name": "bot1",
+      "bot_path": "bot1.py",
+      "bot_resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+      "bot_sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+      "scenario_count": 5,
+      "passed_count": 1,
+      "pass_rate": 0.2,
+      "judge_error_count": 0,
+      "infrastructure_failure_count": 2,
+      "voice_latency": {
+        "completed_turns": 8,
+        "ttfa_p50_ms": 919,
+        "ttfa_p95_ms": 5580,
+        "ttla_p50_ms": 7239,
+        "ttla_p95_ms": 15097
+      },
+      "voice_p95_latency_ms": 5580,
+      "wall_time_s": 400.644,
+      "artifact_dirs": [
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday",
+        "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday"
+      ],
+      "artifact_paths": {
+        "results": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/results.json",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/results.json"
+        ],
+        "runs": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/runs.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/runs.jsonl"
+        ],
+        "latency": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/latency.jsonl",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/latency.jsonl"
+        ],
+        "bot_log": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/bot.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/bot.log"
+        ],
+        "eval_log": [
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/eval.log",
+          "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/eval.log"
+        ]
+      },
+      "scenarios": [
+        {
+          "id": "happy_booking_cleaning_next_tuesday",
+          "passed": false,
+          "reason": "The agent did not confirm the booking, provide a confirmation ID, or collect the caller's name to complete the appointment.",
+          "turn_count": 3,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi, I\u2019d like to book a routine cleaning for next Tuesday afternoon."
+            },
+            {
+              "speaker": "agent",
+              "text": "We have availability next Tuesday, June second at one point zero PM, two point three PM or four point zero PM, which time works best for you. And may I have your name for the appointment?"
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7866",
+          "port": 7866,
+          "run_id": "9440d2e8",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot1",
+            "passed_path": "bot1.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+            "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+            "bot_url": "http://localhost:7866",
+            "port": 7866,
+            "command": "uv run bot1.py --host localhost --port 7866",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cleaning_next_tuesday/eval.log"
+          },
+          "infrastructure_failure": false
+        },
+        {
+          "id": "happy_booking_new_patient_friday",
+          "passed": false,
+          "reason": "The agent did not confirm that the appointment was booked or provide a confirmation ID, which is required by the success criteria.",
+          "turn_count": 3,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi Aria, I\u2019m Devin Carter, a new patient. I\u2019d like to schedule my first appointment this Friday at 2:30\u202fPM because I\u2019m experiencing tooth sensitivity."
+            },
+            {
+              "speaker": "agent",
+              "text": "Could you confirm the date for this Friday? Today is Saturday, May thirty, so I want to make sure I schedule correctly"
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7867",
+          "port": 7867,
+          "run_id": "9e3dda2f",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot1",
+            "passed_path": "bot1.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+            "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+            "bot_url": "http://localhost:7867",
+            "port": 7867,
+            "command": "uv run bot1.py --host localhost --port 7867",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_new_patient_friday/eval.log"
+          },
+          "infrastructure_failure": false
+        },
+        {
+          "id": "happy_booking_cavity_followup",
+          "passed": false,
+          "reason": "Voice eval failed before judging: InvalidStateError: ",
+          "turn_count": 10,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi Aria, I\u2019d like to schedule a cavity follow\u2011up for June\u202f4,\u202f2026 at 1\u202fPM, please."
+            },
+            {
+              "speaker": "agent",
+              "text": "May I have your name please"
+            },
+            {
+              "speaker": "caller",
+              "text": "My name is Priya Shah."
+            },
+            {
+              "speaker": "agent",
+              "text": "I can schedule a cavity follow up for June fourth."
+            },
+            {
+              "speaker": "caller",
+              "text": "Yes, please schedule it for June\u202f4,\u202f2026 at 1\u202fPM. Thank you."
+            },
+            {
+              "speaker": "agent",
+              "text": "Your appointment is confirmed pre assure you have a"
+            },
+            {
+              "speaker": "caller",
+              "text": "Thank you, Aria. The appointment is set for June\u202f4 at 1"
+            },
+            {
+              "speaker": "agent",
+              "text": "Your appointment is confirmed for"
+            },
+            {
+              "speaker": "caller",
+              "text": "Thank you, Aria\u2014I\u2019ve confirmed the appointment for June\u202f4,\u202f2026 at 1\u202fPM. Have a great day!"
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "infrastructure_failure": true,
+          "error_type": "InvalidStateError",
+          "bot_url": "http://localhost:7868",
+          "port": 7868,
+          "run_id": "dfdf07ad",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot1",
+            "passed_path": "bot1.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+            "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+            "bot_url": "http://localhost:7868",
+            "port": 7868,
+            "command": "uv run bot1.py --host localhost --port 7868",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/happy_booking_cavity_followup/eval.log"
+          }
+        },
+        {
+          "id": "relative_date_this_friday",
+          "passed": true,
+          "reason": "The agent confirmed the appointment for 'this Friday, June fifth' showing it interpreted the relative date correctly.",
+          "turn_count": 9,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi, I\u2019d like to schedule a dental check\u2011up for this Friday afternoon, please."
+            },
+            {
+              "speaker": "agent",
+              "text": "What time this Friday afternoon would work for you?"
+            },
+            {
+              "speaker": "caller",
+              "text": "How about 2:00\u202fPM this Friday?"
+            },
+            {
+              "speaker": "agent",
+              "text": "May I have your name for the appointment?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Sure, it\u2019s Alex\u202fKim."
+            },
+            {
+              "speaker": "agent",
+              "text": "Just to confirm, you'd like this Friday, June fifth at two pm for a dental check up"
+            },
+            {
+              "speaker": "caller",
+              "text": "Yes, that\u2019s correct\u2014Friday, June\u202f5th at 2:00\u202fPM for a check\u2011up. Thank you!  \nGoodbye."
+            },
+            {
+              "speaker": "agent",
+              "text": "I've checked for this Friday, June."
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "bot_url": "http://localhost:7869",
+          "port": 7869,
+          "run_id": "e06e8dfe",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot1",
+            "passed_path": "bot1.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+            "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+            "bot_url": "http://localhost:7869",
+            "port": 7869,
+            "command": "uv run bot1.py --host localhost --port 7869",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_this_friday/eval.log"
+          },
+          "infrastructure_failure": false
+        },
+        {
+          "id": "relative_date_next_monday",
+          "passed": false,
+          "reason": "Voice eval failed before judging: InvalidStateError: ",
+          "turn_count": 6,
+          "transcript": [
+            {
+              "speaker": "agent",
+              "text": "Thanks for calling Bright Smile Dental. This is Arya. How can I help?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Hi, I\u2019d like to schedule an appointment for next Monday at 4\u202fPM for a chipped filling."
+            },
+            {
+              "speaker": "agent",
+              "text": "May I have your name please?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Jordan Reed."
+            },
+            {
+              "speaker": "agent",
+              "text": "Your appointment is confirmed for Monday, June first at four point zero PM for a chipped filling. Your confirmation ID is BSD one nil nil two. Is there anything else I can help you with today?"
+            },
+            {
+              "speaker": "caller",
+              "text": "Goodbye!"
+            }
+          ],
+          "tool_calls": [],
+          "category": "booking",
+          "severity": "high",
+          "infrastructure_failure": true,
+          "error_type": "InvalidStateError",
+          "bot_url": "http://localhost:7870",
+          "port": 7870,
+          "run_id": "19110948",
+          "judge_policy": {
+            "version": "answer-present-v1",
+            "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+          },
+          "voice_agent": {
+            "name": "bot1",
+            "passed_path": "bot1.py",
+            "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+            "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+            "bot_url": "http://localhost:7870",
+            "port": 7870,
+            "command": "uv run bot1.py --host localhost --port 7870",
+            "batch_id": "20260530T222212Z-9ded4a20"
+          },
+          "artifacts": {
+            "dir": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday",
+            "results": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/results.json",
+            "runs": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/runs.jsonl",
+            "latency": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/latency.jsonl",
+            "bot_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/bot.log",
+            "eval_log": "batch_artifacts/20260530T222212Z-9ded4a20/bot1/relative_date_next_monday/eval.log"
+          }
+        }
+      ]
+    }
+  }
+}

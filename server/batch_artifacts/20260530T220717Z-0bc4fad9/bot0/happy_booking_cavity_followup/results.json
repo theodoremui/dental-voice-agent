@@ -1,0 +1,81 @@
+{
+  "run_id": "8d1d6036",
+  "timestamp": 1780178927.3014872,
+  "timestamp_iso": "2026-05-30T22:08:47Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": null,
+  "voice_latency": null,
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "happy_booking_cavity_followup",
+      "passed": false,
+      "reason": "No evaluator output provided.",
+      "turn_count": 9,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I'd like to schedule a cavity follow\u2011up for June\u202f4,\u202f2026 at 1\u202fPM, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "I can help you schedule that cavity follow up for June fourth at one point zero PM. May I have your name for the appointment"
+        },
+        {
+          "speaker": "caller",
+          "text": "Priya Shah."
+        },
+        {
+          "speaker": "agent",
+          "text": "May I have your name, please?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Priya Shah."
+        },
+        {
+          "speaker": "agent",
+          "text": "Your appointment is booked for pre assure on June fourth at one point zero PM for a cavity follow up. Confirmation ID is BSD one zero zero two is the name correct as pre assure or did you mean pre assha"
+        },
+        {
+          "speaker": "caller",
+          "text": "No, it\u2019s Priya\u202fShah\u2014P\u2011R\u2011I\u2011Y\u2011A space S\u2011H\u2011A\u2011H. Thank you.  \nGoodbye."
+        },
+        {
+          "speaker": "agent",
+          "text": "Um, I'll update the name to Priya Shah for your appointment on June fourth at one point zero PM. Your confirmation ID remains BSD one zero two"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7865",
+  "voice_agent": {
+    "name": "bot0",
+    "passed_path": "bot0.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot0.py",
+    "sha256": "492f3f7bc0a97172480cc84d3fe549ae6c1d971aafb5e2f76cd53558374d45b7",
+    "bot_url": "http://localhost:7865",
+    "port": 7865,
+    "command": "uv run bot0.py --host localhost --port 7865",
+    "batch_id": "20260530T220717Z-0bc4fad9"
+  }
+}
