@@ -841,7 +841,7 @@ def _env_positive_int_or_none(name: str, default: int | None) -> int | None:
 def default_worker_count(*, total_tasks: int, bot_count: int) -> int:
     if total_tasks <= 0:
         return 1
-    return min(total_tasks, min(6, bot_count * 2))
+    return min(total_tasks, max(1, bot_count))
 
 
 def resolve_max_workers(

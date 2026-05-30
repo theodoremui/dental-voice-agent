@@ -121,3 +121,22 @@ def test_appointment_fast_path_confirms_default_afternoon_slot():
     assert response is not None
     assert "Booked for Tuesday, June 2 at two PM" in response
     assert "confirmation BSD" in response
+
+
+def test_appointment_fast_path_merges_bare_name_followup():
+    processor = bot2.AppointmentFastPathProcessor(today=date(2026, 5, 30))
+    context = LLMContext()
+    context.add_message(
+        {
+            "role": "user",
+            "content": "I need an appointment next Monday at 4 PM for a chipped filling.",
+        }
+    )
+
+    assert processor._response_for_context(context) == "May I have your name?"
+
+    context.add_message({"role": "user", "content": "Jordan Reed."})
+    response = processor._response_for_context(context)
+
+    assert response is not None
+    assert "Booked for Monday, June 1 at four PM" in response

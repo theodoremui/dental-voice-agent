@@ -483,9 +483,9 @@ def test_resolve_max_workers_caps_gradium_tts_sessions(monkeypatch):
         bot_count=2,
     )
 
-    assert max_workers == 3
+    assert max_workers == 2
     assert session_limit == 3
-    assert capped is True
+    assert capped is False
 
     monkeypatch.setenv("EVAL_TTS_ACTIVE_SESSION_LIMIT", "0")
     max_workers, session_limit, capped = resolve_max_workers(

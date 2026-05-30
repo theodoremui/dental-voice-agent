@@ -9,10 +9,11 @@ The short version:
 - `bot0.py` is the baseline live voice bot.
 - `bot1.py` adds coarse end-to-end voice latency measurement.
 - `bot2.py` adds deeper latency instrumentation, explicit audio contracts,
-  configurable VAD and LLM settings, and more testable construction helpers.
-- The most valuable next work is not one more isolated tweak. It is a disciplined
-  loop: measure, inspect stage timings, tune turn segmentation, validate behavior
-  in voice mode, and only then keep or revert each change.
+  configurable VAD and LLM settings, fast-path booking behavior, and more
+  testable construction helpers.
+- The most valuable next work is to keep bot2 in a disciplined operating loop:
+  measure, inspect stage timings, keep batch concurrency controlled, validate
+  behavior in voice mode, and only then keep or revert each change.
 
 ## Current Bot Progression
 
@@ -85,7 +86,7 @@ Known limitation:
   can look better than the caller experience. If VAD stops too early, the value
   can look worse or the turn can fragment.
 
-### bot2.py: Tunable Runtime and Stage Instrumentation
+### bot2.py: Tunable Runtime, Stage Instrumentation, and Fast Path
 
 `bot2.py` introduces several higher-leverage changes:
 
@@ -98,6 +99,7 @@ Known limitation:
 - A timeout around Twilio caller-info lookup.
 - LLM temperature and max-token controls.
 - Stage-level latency logging through `StageLatencyLogger`.
+- Appointment fast-path handling for common booking turns before the LLM.
 - Testable helper functions covered by `test_bot2.py`.
 
 The bot2 pipeline is:
@@ -107,6 +109,7 @@ transport.input()
   -> stt
   -> stage_transcript_logger
   -> user_aggregator
+  -> appointment_fast_path
   -> llm
   -> stage_turn_logger
   -> tts
@@ -120,11 +123,14 @@ This is the second major improvement technique: split the voice path into
 observable stages so each latency and reliability problem has a narrower search
 space.
 
-The main caution from local artifacts is that bot2's latency improved in one
-batch run, but the conversations often failed to progress past the greeting or
-fragmented caller speech into multiple partial turns. That means bot2 contains
-important techniques, but the complete bot2 configuration is not automatically
-better. It needs validation and likely tuning before becoming the default.
+Earlier local artifacts showed a real bot2 failure mode: latency looked good in
+some runs, but conversations could fail to progress past the greeting or split
+one caller request into partial turns. The latest bot2 pass addresses the main
+root causes directly: it keeps WebRTC VAD conservative, removes LLM-gated
+incomplete-turn filtering, makes Twilio/STT sample rates explicit, adds
+stage-level artifacts per scenario, handles common booking requests before
+streamed LLM tool-call behavior, and makes batch evaluation lower-concurrency by
+default.
 
 ## Improvement Principles
 
@@ -494,14 +500,15 @@ scenario class:
 
 ### Specific Next Experiment
 
-Create a bot2 variant with:
+Keep the current bot2 default without incomplete-turn filtering. If it is tested
+again, do it as a controlled variant with:
 
-- bot2 explicit audio contracts.
-- bot2 stage logging.
-- bot2 LLM token controls.
+- The same explicit audio contracts.
+- The same stage logging and batch artifacts.
+- The same LLM token controls.
 - WebRTC VAD stop at `0.55` or `0.65`.
 - No aggressive confidence/min-volume overrides.
-- Then compare with and without incomplete-turn filtering.
+- The booking fast path either enabled in both runs or disabled in both runs.
 
 Keep the winner only if it improves both:
 
@@ -560,7 +567,7 @@ The STT/VAD stack is probably too aggressive when transcripts show:
 
 ```python
 temperature=_env_float("NEMOTRON_LLM_TEMPERATURE", 0.2)
-max_tokens=_env_int("NEMOTRON_LLM_MAX_TOKENS", 160)
+max_tokens=_env_int("NEMOTRON_LLM_MAX_TOKENS", 240)
 ```
 
 This is a good technique because voice responses should be concise and
@@ -578,8 +585,13 @@ NEMOTRON_LLM_TEMPERATURE=0.2
 Use a voice-sized max token limit:
 
 ```text
-NEMOTRON_LLM_MAX_TOKENS=160
+NEMOTRON_LLM_MAX_TOKENS=240
 ```
+
+The current default is 240 because lower caps improved brevity but could cut off
+or weaken streamed tool-call turns in live booking evals. Keep responses concise
+through prompt and fast-path behavior first; use the token cap as a guardrail,
+not as the only brevity mechanism.
 
 Keep thinking disabled for live voice unless the server is proven to separate
 reasoning from user-visible content:
@@ -630,6 +642,27 @@ reliable.
 - `register_pipecat_functions()` registers the live handlers.
 
 This avoids prompt/eval/live drift.
+
+### bot2 Appointment Fast Path
+
+`bot2.py` now inserts `AppointmentFastPathProcessor` between the user
+aggregator and the LLM. It is intentionally narrow: it only handles common
+appointment-booking requests that provide, or can quickly collect, name, date,
+time, and reason.
+
+The fast path improves the voice agent in three ways:
+
+- It books simple requests through the same backend tool implementation without
+  waiting for Nemotron streamed tool-call behavior.
+- It asks one missing-field question at a time, then merges the caller's follow-up
+  into pending booking state.
+- It recognizes direct name follow-ups such as `Jordan Reed.` after asking for a
+  name, which fixes a common pending-booking failure.
+
+It also applies a bounded default for vague afternoon requests by using `2:00 PM`
+when the caller supplied the other required booking fields. This should remain a
+front-desk optimization, not a general replacement for LLM tool use. Anything
+outside the narrow booking pattern still falls through to the normal LLM path.
 
 ### Improvement Techniques
 
@@ -702,6 +735,8 @@ it must not block the first user interaction.
 - `build_user_aggregator_params()`
 - `build_stt_service()`
 - `build_twilio_serializer()`
+- `AppointmentFastPathProcessor`
+- Narrow parsers for booking date, time, name, and reason extraction.
 
 This is a major maintainability improvement. It lets tests verify contracts
 without starting a live bot or external services.
@@ -717,6 +752,8 @@ Continue adding narrow tests for:
 - STT sample rate.
 - LLM default temperature and token cap.
 - Absence or presence of incomplete-turn filtering in specific variants.
+- Appointment fast-path behavior for complete requests, missing fields, vague
+  afternoon requests, and bare-name follow-ups.
 - Stage latency tracker behavior for missing stages, duplicate VAD frames, and
   cancelled turns.
 
@@ -731,7 +768,8 @@ When comparing bot versions:
 
 - Use the same scenarios.
 - Use the same env vars.
-- Use `--max-workers 1` for first diagnosis.
+- Use `--max-workers 1` for first diagnosis, or rely on the current default when
+  running one scenario per bot.
 - Capture per-bot artifacts.
 - Compare both pass rate and latency.
 - Inspect scenario transcripts, not only aggregate metrics.
@@ -767,6 +805,13 @@ uv run python batch_eval_runner.py \
 ```
 
 Raise concurrency only after the single-worker run is stable.
+
+The batch runner now defaults to `min(total_tasks, bot_count)` workers. For a
+single bot, that means scenario runs are serial unless `--max-workers` is
+explicitly raised. This matters because the ASR, browser/WebRTC harness, and TTS
+session limits can create false failures under concurrency. Keep
+`EVAL_TTS_ACTIVE_SESSION_LIMIT` as a separate safety cap for explicit worker
+overrides and multi-bot runs.
 
 ### What to Read First
 
@@ -816,6 +861,25 @@ only looking at browser evals.
 
 ## Specific Findings From the Current Variants
 
+### Latest Verification Snapshot
+
+The latest bot2 fix pass verified the code-level changes with:
+
+```bash
+uv run pytest
+uv run ruff check .
+```
+
+The local result was `49 passed` for the test suite and a clean ruff check. The
+targeted voice smoke for `happy_booking_cleaning_next_tuesday` passed with a
+booked Tuesday appointment and voice p95 TTFA around 302 ms. A serial
+five-scenario booking run then passed four of five scenarios; the
+`relative_date_this_friday` miss had no caller audio in the artifacts, so it was
+treated as a harness miss and rerun in isolation, where it passed with voice p95
+TTFA around 1372 ms. Keep that distinction in future postmortems: a run with no
+caller audio is not the same failure class as a bot that heard the request and
+responded incorrectly.
+
 ### Finding 1: bot1.py Is a Valuable Measurement Baseline
 
 `bot1.py` adds latency logging with minimal behavioral changes. This makes it
@@ -836,23 +900,30 @@ The strongest bot2 techniques are:
 - Separate VAD profiles.
 - Stage-level latency probes.
 - LLM token controls.
+- Appointment fast-path booking for simple requests.
+- Pending booking state that merges direct follow-up answers.
 - Twilio caller lookup timeout.
+- Serial-by-default batch evaluation for one-bot sweeps.
 - Unit-testable helper functions.
 
 These should be kept or ported into the eventual default bot.
 
-### Finding 3: bot2.py Needs Turn-Segmentation Validation
+### Finding 3: bot2.py's Original Failure Was a Combined Voice-Path Issue
 
-The local batch artifacts show bot2 often had low measured latency but poor task
-completion. The likely contributing pattern is turn fragmentation:
+Earlier batch artifacts showed bot2 with low measured latency but poor task
+completion. The contributing pattern was not one isolated bug; it combined turn
+fragmentation, sample-rate ambiguity on the Twilio path, LLM-gated incomplete
+turn filtering, and fragile streamed tool-call behavior:
 
 - Short caller phrases were treated as separate turns.
 - LLM generations were interrupted by continued caller audio.
 - Some runs reached tool calls only after multiple partial transcripts.
 - Several scenario transcripts only captured the greeting and caller request.
 
-This does not mean the bot2 techniques are wrong. It means aggressive VAD and
-turn-completion changes must be evaluated together, not separately.
+The current mitigation is systematic: conservative WebRTC VAD defaults, explicit
+Twilio/STT sample-rate contracts, default turn aggregation without incomplete
+turn filtering, stage latency artifacts, and a narrow booking fast path that
+avoids waiting on LLM tool-call streaming for common appointment requests.
 
 ### Finding 4: Environment Overrides Can Dominate Code Defaults
 
@@ -862,10 +933,19 @@ record the env profile used for benchmark runs.
 
 Without that, two runs of the same file may not be comparable.
 
+### Finding 5: Some Voice Eval Misses Are Harness Failures
+
+The `relative_date_this_friday` scenario produced a failure in a serial batch
+where the bot artifacts showed no caller audio arriving. The same scenario
+passed when rerun by itself. Future investigations should check for missing
+caller audio before tuning prompts, VAD, or tools.
+
 ## Recommended Next Bot Variant
 
-Create a `bot3.py` or revise `bot2.py` only after deciding whether the variants
-are meant to be preserved. The recommended implementation profile is:
+Continue hardening `bot2.py` unless preserving every historical variant is more
+important than keeping the runtime surface small. Create a `bot3.py` only if the
+team wants a clean experiment without changing the current bot2 behavior. The
+recommended implementation profile is:
 
 ### Keep From bot2.py
 
@@ -876,18 +956,22 @@ are meant to be preserved. The recommended implementation profile is:
 - Separate WebRTC and Twilio VAD builders.
 - `LatencyLogger`.
 - `StageLatencyLogger`.
+- `AppointmentFastPathProcessor` for narrow booking requests.
 - Twilio caller-info timeout.
 - LLM temperature and max-token controls.
+- Batch eval default concurrency of one scenario per bot.
 - Helper functions with unit tests.
 
 ### Change From bot2.py
 
-- Use conservative WebRTC VAD by default.
-- Ensure current env does not override WebRTC VAD to aggressive thresholds during
-  evals.
-- Consider restoring incomplete-turn filtering only for a controlled experiment,
-  not as a default assumption.
-- Add a concise prompt rule to avoid asking for already-provided fields.
+- Broaden the booking fast path only when the new pattern is deterministic and
+  covered by unit tests.
+- Keep checking that `.env` does not override WebRTC VAD to aggressive thresholds
+  during evals.
+- Treat incomplete-turn filtering as a controlled experiment, not a default
+  assumption.
+- Add a concise prompt rule to avoid asking for already-provided fields outside
+  the fast path.
 - Add tool-argument validation so empty tool calls do not look successful.
 - Add a per-run config snapshot to batch outputs so VAD and LLM settings are
   preserved with metrics.
@@ -897,7 +981,7 @@ are meant to be preserved. The recommended implementation profile is:
 ```text
 NEMOTRON_ENABLE_THINKING=false
 NEMOTRON_LLM_TEMPERATURE=0.2
-NEMOTRON_LLM_MAX_TOKENS=160
+NEMOTRON_LLM_MAX_TOKENS=240
 
 VOICE_WEBRTC_VAD_CONFIDENCE=0.55
 VOICE_WEBRTC_VAD_START_SECS=0.12
@@ -1009,18 +1093,20 @@ Use this checklist when making the next improvement pass.
 
 ## Priority Roadmap
 
-### Priority 1: Stabilize Turn Segmentation
+### Priority 1: Preserve Turn Segmentation and Booking Progress
 
 Goal:
 
 - The bot should hear a full caller request as one coherent turn unless the
-  caller truly pauses long enough to invite a response.
+  caller truly pauses long enough to invite a response, and common booking
+  requests should progress without waiting on fragile streamed tool calls.
 
 Actions:
 
 - Reset WebRTC VAD env vars to conservative defaults.
-- Re-run five booking scenarios with `--max-workers 1`.
+- Re-run five booking scenarios serially or with one worker per bot.
 - Inspect stage logs for `superseded` and `interrupted` turns.
+- Keep the booking fast path narrow and covered by unit tests.
 - Tune `VOICE_WEBRTC_VAD_STOP_SECS` upward before reintroducing LLM incomplete
   turn filtering.
 
@@ -1059,7 +1145,8 @@ Goal:
 
 Actions:
 
-- Keep `NEMOTRON_LLM_MAX_TOKENS=160` or lower only after eval validation.
+- Keep `NEMOTRON_LLM_MAX_TOKENS=240`; lower it only after booking evals show
+  tool-call and confirmation quality remain stable.
 - Keep responses to one spoken sentence when asking for missing details.
 - Investigate TTS first-audio latency from
   `llm_first_text_or_tool_to_first_output_audio`.
@@ -1083,17 +1170,20 @@ Actions:
 
 ## Final Recommendation
 
-The best path is to treat `bot1.py` as the stable measured baseline and `bot2.py`
-as the experimental instrumentation and tuning branch. Port bot2's safe
-techniques forward, but do not accept bot2's complete behavior until it beats
-bot1 on voice task completion and p95 latency under the same environment.
+The best path is to keep `bot1.py` as the stable measured baseline and treat
+`bot2.py` as the actively hardened voice-runtime branch. Bot2 now contains the
+right shape for the next default candidate: explicit audio contracts, conservative
+VAD defaults, stage artifacts, bounded startup work, concise LLM settings, and a
+narrow deterministic booking fast path.
 
-The next high-confidence improvement is a bot variant that combines:
+The next high-confidence improvement pass should keep:
 
 - bot1's stable behavior and latency logger.
 - bot2's explicit audio contracts.
 - bot2's stage latency probes.
 - conservative WebRTC VAD defaults.
+- bot2's appointment fast path for common bookings.
+- serial-by-default batch evaluation for one-bot sweeps.
 - per-run config snapshots.
 - stricter tool validation.
 

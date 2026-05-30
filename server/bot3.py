@@ -4,14 +4,15 @@
 # SPDX-License-Identifier: BSD 2-Clause License
 #
 
-"""Bright Smile Dental front-desk voice agent.
+"""Bright Smile Dental memory-first front-desk voice agent.
 
 A caller reaches the dental front desk by browser WebRTC or Twilio phone call.
 Appointment and insurance tools are backed by the in-memory mock backend in
 ``tools.py``.
 
-Pipeline: Nemotron Speech Streaming STT → Nemotron-3-Super-120B LLM → Gradium TTS, with direct
-function tools registered on the LLM context.
+Pipeline: Nemotron Speech Streaming STT -> memory-first front desk processor
+-> Nemotron-3-Super-120B LLM fallback -> Gradium TTS, with direct function
+tools registered on the LLM context.
 
 Run the bot using::
 
@@ -20,6 +21,7 @@ Run the bot using::
 
 import os
 import re
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any
 
@@ -130,10 +132,27 @@ def _next_weekday(today: date, weekday: int) -> date:
     return today + timedelta(days=days)
 
 
+def _normalize_text(text: str) -> str:
+    normalized = (
+        text.replace("\u2019", "'")
+        .replace("\u2011", "-")
+        .replace("\u2013", "-")
+        .replace("\u2014", "-")
+        .replace("\u202f", " ")
+        .replace("\xa0", " ")
+    )
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
 def _extract_relative_or_absolute_date(text: str, today: date) -> str | None:
-    lowered = text.lower()
+    lowered = _normalize_text(text).lower()
+    if re.search(r"\btomorrow\b", lowered):
+        return (today + timedelta(days=1)).isoformat()
+
     for weekday_name, weekday in WEEKDAYS.items():
         if f"this {weekday_name}" in lowered or f"next {weekday_name}" in lowered:
+            return _next_weekday(today, weekday).isoformat()
+        if re.search(rf"\b{weekday_name}\b", lowered):
             return _next_weekday(today, weekday).isoformat()
 
     month_match = re.search(
@@ -178,7 +197,7 @@ def _extract_relative_or_absolute_date(text: str, today: date) -> str | None:
 
 
 def _extract_time(text: str) -> str | None:
-    lowered = text.lower().replace(".", "")
+    lowered = _normalize_text(text).lower().replace(".", "")
     if re.search(r"\b(1|one)\s*(pm|p m)\b", lowered):
         return "1:00 PM"
     if re.search(r"\b(2|two)\s*(pm|p m)\b", lowered):
@@ -190,38 +209,109 @@ def _extract_time(text: str) -> str | None:
     return None
 
 
+def _clean_name(candidate: str) -> str | None:
+    words = [word.strip(" .,!?:;").lower() for word in candidate.split()]
+    words = [word for word in words if word]
+    if not words:
+        return None
+
+    non_names = {
+        "a",
+        "an",
+        "the",
+        "new",
+        "patient",
+        "caller",
+        "calling",
+        "appointment",
+        "cleaning",
+        "check",
+        "checkup",
+        "cavity",
+        "visit",
+        "and",
+        "at",
+        "for",
+        "because",
+        "with",
+        "hi",
+        "hello",
+        "hey",
+        "aria",
+        "arya",
+    }
+    if words[0] in non_names:
+        return None
+    trimmed = []
+    for word in words:
+        if word in non_names:
+            break
+        trimmed.append(word)
+    if not trimmed or len(trimmed) > 3:
+        return None
+    return " ".join(word.capitalize() for word in trimmed)
+
+
 def _extract_name(text: str) -> str | None:
+    normalized = _normalize_text(text)
     patterns = [
-        r"\bmy name is ([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)",
-        r"\bthis is ([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)",
-        r"\bi'?m ([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)",
-        r"\bi am ([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)",
+        r"\bmy name is ([A-Za-z]+(?:\s+[A-Za-z]+){0,2})",
+        r"\bname is ([A-Za-z]+(?:\s+[A-Za-z]+){0,2})",
+        r"\bthis is ([A-Za-z]+(?:\s+[A-Za-z]+){0,2})",
+        r"\bi'?m ([A-Za-z]+(?:\s+[A-Za-z]+){0,2})",
+        r"\bi am ([A-Za-z]+(?:\s+[A-Za-z]+){0,2})",
     ]
     for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
+        match = re.search(pattern, normalized, re.IGNORECASE)
         if match:
-            return match.group(1).strip()
-    bare_name = re.fullmatch(r"\s*([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\.?\s*", text)
+            cleaned = _clean_name(match.group(1))
+            if cleaned:
+                return cleaned
+    leading_name = re.match(r"\s*([A-Za-z]+(?:\s+[A-Za-z]+){0,2})[.,!?]\s+", normalized)
+    if leading_name:
+        cleaned = _clean_name(leading_name.group(1))
+        if cleaned:
+            return cleaned
+    bare_name = re.fullmatch(r"\s*([A-Za-z]+(?:\s+[A-Za-z]+){0,2})\.?\s*", normalized)
     if bare_name:
-        return bare_name.group(1).strip()
+        return _clean_name(bare_name.group(1))
     return None
 
 
 def _extract_reason(text: str) -> str | None:
-    lowered = text.lower()
+    lowered = _normalize_text(text).lower()
     if "cleaning" in lowered:
         return "routine cleaning"
     if "cavity" in lowered:
         return "cavity follow-up"
+    if "sensitivity" in lowered:
+        return "tooth sensitivity"
     if "new patient" in lowered or "first visit" in lowered:
         return "new patient visit"
     if "check-up" in lowered or "checkup" in lowered or "check up" in lowered:
         return "check-up"
     if "chipped filling" in lowered:
         return "chipped filling"
-    if "sensitivity" in lowered:
-        return "tooth sensitivity"
     return None
+
+
+def _extract_confirmation_id(text: str) -> str | None:
+    match = re.search(r"\b(BSD\s*\d{3,6})\b", _normalize_text(text), re.IGNORECASE)
+    if not match:
+        return None
+    return re.sub(r"\s+", "", match.group(1)).upper()
+
+
+def _mentions_vague_afternoon(text: str) -> bool:
+    return bool(re.search(r"\b(afternoon|after lunch|later today)\b", _normalize_text(text).lower()))
+
+
+def _looks_like_correction(text: str) -> bool:
+    lowered = _normalize_text(text).lower()
+    return any(
+        phrase in lowered
+        for phrase in ("actually", "sorry", "correction", "correct that", "i mean", "instead", "rather")
+    )
 
 
 def _format_fast_date(iso_date: str) -> str:
@@ -238,13 +328,54 @@ def _format_fast_time(time_value: str) -> str:
     }.get(time_value, time_value)
 
 
-class AppointmentFastPathProcessor(FrameProcessor):
-    """Handles simple appointment turns without waiting on LLM tool-call streaming."""
+def _format_slot_list(slots: list[str]) -> str:
+    spoken = [_format_fast_time(slot) for slot in slots]
+    if len(spoken) == 1:
+        return spoken[0]
+    return ", ".join(spoken[:-1]) + f", or {spoken[-1]}"
+
+
+@dataclass
+class CallMemory:
+    """Short-lived per-call memory. It is never persisted across calls."""
+
+    intent: str = ""
+    name: str = ""
+    appointment_date: str = ""
+    appointment_time: str = ""
+    reason: str = ""
+    reschedule_confirmation_id: str = ""
+    last_question: str = ""
+    confirmation_id: str = ""
+    vague_time_requested: bool = False
+    wants_time_options: bool = False
+    offered_slots: list[str] = field(default_factory=list)
+
+    def has_booking_context(self) -> bool:
+        return any(
+            (
+                self.intent == "booking",
+                self.appointment_date,
+                self.appointment_time,
+                self.reason,
+                self.vague_time_requested,
+                self.wants_time_options,
+                self.offered_slots,
+            )
+        )
+
+    def booking_ready(self) -> bool:
+        return all((self.name, self.appointment_date, self.appointment_time, self.reason))
+
+
+class MemoryFirstFrontDeskProcessor(FrameProcessor):
+    """Handles common front-desk turns from state before falling back to the LLM."""
 
     def __init__(self, *, today: date | None = None):
         super().__init__()
         self._today = today or date.today()
-        self._pending_booking: dict[str, str] = {}
+        self._memory = CallMemory()
+        self._processed_user_count = 0
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -263,91 +394,243 @@ class AppointmentFastPathProcessor(FrameProcessor):
         await self.push_frame(LLMFullResponseEndFrame(), direction)
 
     def _response_for_context(self, context: Any) -> str | None:
-        user_text = self._latest_user_text(context)
-        if not user_text:
+        new_texts = self._new_caller_texts(context)
+        if not new_texts:
             return None
 
-        lowered = user_text.lower()
-        if self._pending_booking:
-            self._merge_pending(user_text)
-            if self._is_confirmation(lowered) and self._pending_ready():
-                return self._book_pending()
-            return self._next_pending_question()
+        for text in new_texts:
+            self._remember(text)
 
-        if not self._looks_like_booking_request(lowered):
+        latest = _normalize_text(new_texts[-1])
+        lowered = latest.lower()
+
+        if self._is_greeting_only(lowered) and not self._memory.intent:
             return None
 
+        policy_response = self._policy_response(lowered)
+        if policy_response:
+            return policy_response
+
+        if self._looks_like_insurance(lowered):
+            return self._insurance_response(lowered)
+
+        if self._looks_like_reschedule(lowered) or self._memory.intent == "reschedule":
+            self._memory.intent = "reschedule"
+            return self._reschedule_response()
+
+        if self._looks_like_booking(lowered) or self._memory.has_booking_context():
+            self._memory.intent = "booking"
+            return self._booking_response(lowered)
+
+        return None
+
+    def _new_caller_texts(self, context: Any) -> list[str]:
+        user_texts = []
+        for message in context.get_messages():
+            if message.get("role") != "user" or not isinstance(message.get("content"), str):
+                continue
+            content = message["content"]
+            if "A caller just reached the dental front desk" in content:
+                continue
+            user_texts.append(content)
+
+        new_texts = user_texts[self._processed_user_count :]
+        self._processed_user_count = len(user_texts)
+        return new_texts
+
+    def _remember(self, text: str) -> None:
+        normalized = _normalize_text(text)
+        lowered = normalized.lower()
+        is_correction = _looks_like_correction(normalized)
+
+        if self._looks_like_booking(lowered):
+            self._memory.intent = "booking"
+        if self._looks_like_reschedule(lowered):
+            self._memory.intent = "reschedule"
+
+        name = _extract_name(normalized)
+        if name:
+            self._memory.name = name
+
+        appointment_date = self._date_from_text(normalized)
+        if appointment_date and (not self._memory.appointment_date or is_correction or self._memory.intent):
+            self._memory.appointment_date = appointment_date
+
+        appointment_time = _extract_time(normalized)
+        if appointment_time:
+            self._memory.appointment_time = appointment_time
+            self._memory.vague_time_requested = False
+
+        reason = _extract_reason(normalized)
+        if reason:
+            self._memory.reason = reason
+
+        confirmation_id = _extract_confirmation_id(normalized)
+        if confirmation_id:
+            self._memory.reschedule_confirmation_id = confirmation_id
+
+        if _mentions_vague_afternoon(normalized) and not appointment_time:
+            self._memory.vague_time_requested = True
+        if any(phrase in lowered for phrase in ("what times", "which times", "options", "open slots")):
+            self._memory.wants_time_options = True
+
+    def _date_from_text(self, text: str) -> str | None:
+        lowered = _normalize_text(text).lower()
+        if "after that" in lowered and self._memory.appointment_date:
+            try:
+                return (date.fromisoformat(self._memory.appointment_date) + timedelta(days=7)).isoformat()
+            except ValueError:
+                return None
+        return _extract_relative_or_absolute_date(text, self._today)
+
+    def _booking_response(self, lowered: str) -> str:
+        if self._is_confirmation(lowered) and self._memory.offered_slots and not self._memory.appointment_time:
+            self._memory.appointment_time = self._preferred_slot(self._memory.offered_slots)
+            self._memory.vague_time_requested = False
+
+        if not self._memory.name:
+            self._memory.last_question = "name"
+            return "May I have your name?"
+        if not self._memory.reason:
+            self._memory.last_question = "reason"
+            return "What is the reason for the visit?"
+        if not self._memory.appointment_date:
+            self._memory.last_question = "date"
+            return "What date would you like?"
+        if not self._memory.appointment_time:
+            if self._memory.vague_time_requested and not self._memory.wants_time_options:
+                slots = self._available_slots()
+                self._memory.appointment_time = self._preferred_slot(slots) if slots else "2:00 PM"
+                self._memory.vague_time_requested = False
+                return self._book_from_memory()
+            if self._memory.vague_time_requested or self._memory.offered_slots:
+                self._memory.last_question = "time"
+                return self._offer_slots()
+            self._memory.last_question = "time"
+            return "What time would you like?"
+
+        return self._book_from_memory()
+
+    def _available_slots(self) -> list[str]:
+        result = TOOL_IMPLS["check_availability"]({"date": self._memory.appointment_date})
+        raw_slots = result.get("open_slots") or []
+        return [slot for slot in raw_slots if isinstance(slot, str)]
+
+    def _offer_slots(self) -> str:
+        self._memory.offered_slots = self._available_slots()
+        if not self._memory.offered_slots:
+            return "I do not see open slots that day. Would another date work?"
+        return (
+            f"I have {_format_slot_list(self._memory.offered_slots)} on "
+            f"{_format_fast_date(self._memory.appointment_date)}. Which works?"
+        )
+
+    def _book_from_memory(self) -> str:
         booking = {
-            "name": _extract_name(user_text) or "",
-            "date": _extract_relative_or_absolute_date(user_text, self._today) or "",
-            "time": _extract_time(user_text) or "",
-            "reason": _extract_reason(user_text) or "",
+            "name": self._memory.name,
+            "date": self._memory.appointment_date,
+            "time": self._memory.appointment_time,
+            "reason": self._memory.reason,
         }
+        result = TOOL_IMPLS["book_appointment"](booking)
+        confirmation_id = str(result.get("confirmation_id", ""))
+        self._memory.confirmation_id = confirmation_id
+        self._memory.intent = ""
+        self._memory.last_question = ""
+        self._memory.offered_slots = []
+        self._memory.wants_time_options = False
+        return (
+            f"Booked for {_format_fast_date(result['date'])} at {_format_fast_time(result['time'])}. "
+            f"Confirmation {confirmation_id}."
+        )
 
-        if not booking["name"]:
-            self._pending_booking = booking
-            return "May I have your name?"
-        if not booking["date"]:
-            self._pending_booking = booking
-            return "What date would you like?"
-        if not booking["reason"]:
-            self._pending_booking = booking
-            return "What is the reason for the visit?"
-        if not booking["time"]:
-            booking["time"] = "2:00 PM"
-            self._pending_booking = booking
-            return self._book_pending()
+    def _reschedule_response(self) -> str:
+        if not self._memory.reschedule_confirmation_id:
+            self._memory.last_question = "confirmation_id"
+            return "What is your confirmation ID?"
+        if not self._memory.appointment_date:
+            self._memory.last_question = "date"
+            return "What date should I move it to?"
+        if not self._memory.appointment_time:
+            self._memory.last_question = "time"
+            return "What time should I move it to?"
 
-        self._pending_booking = booking
-        return self._book_pending()
+        result = TOOL_IMPLS["reschedule_appointment"](
+            {
+                "confirmation_id": self._memory.reschedule_confirmation_id,
+                "date": self._memory.appointment_date,
+                "time": self._memory.appointment_time,
+            }
+        )
+        self._memory.intent = ""
+        if result.get("status") == "rescheduled":
+            return (
+                f"You're rescheduled for {_format_fast_date(result['date'])} "
+                f"at {_format_fast_time(result['time'])}."
+            )
+        return "I could not find that confirmation ID. The office can help look it up."
 
-    def _merge_pending(self, user_text: str) -> None:
-        updates = {
-            "name": _extract_name(user_text) or "",
-            "date": _extract_relative_or_absolute_date(user_text, self._today) or "",
-            "time": _extract_time(user_text) or "",
-            "reason": _extract_reason(user_text) or "",
-        }
-        for key, value in updates.items():
-            if value and not self._pending_booking.get(key):
-                self._pending_booking[key] = value
+    def _insurance_response(self, lowered: str) -> str:
+        provider = self._extract_insurance_provider(lowered)
+        result = TOOL_IMPLS["check_insurance"]({"provider": provider})
+        if result.get("accepted"):
+            return f"Yes, Bright Smile Dental accepts {provider}."
+        return f"The office will confirm {provider} coverage for you."
 
-    def _pending_ready(self) -> bool:
-        return all(self._pending_booking.get(key) for key in ("name", "date", "time", "reason"))
+    def _policy_response(self, lowered: str) -> str | None:
+        if any(word in lowered for word in ("severe pain", "facial swelling", "trauma", "bleeding heavily")):
+            return "Please seek emergency care first. I can also help schedule an urgent dental visit."
+        if any(phrase in lowered for phrase in ("ibuprofen", "root canal", "diagnose", "what dose")):
+            return "I cannot give dental or medication advice, but I can help book a dentist visit."
+        if "cancel" in lowered:
+            return "I cannot cancel appointments here. The office can help, or I can help reschedule."
+        if "hours" in lowered or "closes" in lowered or "open today" in lowered:
+            return "The office will confirm current hours for you."
+        if "phone number" in lowered or "pull up my chart" in lowered or "know who i am" in lowered:
+            return "I cannot identify you or pull up records from caller ID alone."
+        if "goodbye" in lowered or re.fullmatch(r"(bye|thanks bye|thank you bye)[.!]?", lowered):
+            return "Thanks for calling Bright Smile Dental. Goodbye."
+        return None
 
-    def _next_pending_question(self) -> str | None:
-        if not self._pending_booking.get("name"):
-            return "May I have your name?"
-        if not self._pending_booking.get("date"):
-            return "What date would you like?"
-        if not self._pending_booking.get("reason"):
-            return "What is the reason for the visit?"
-        if not self._pending_booking.get("time"):
-            self._pending_booking["time"] = "2:00 PM"
-            return self._book_pending()
-        return self._book_pending()
+    def _looks_like_booking(self, lowered: str) -> bool:
+        intent_words = (
+            "schedule",
+            "book",
+            "appointment",
+            "visit",
+            "cleaning",
+            "follow-up",
+            "follow up",
+            "check-up",
+            "checkup",
+            "chipped filling",
+            "first visit",
+        )
+        return any(word in lowered for word in intent_words) and "cancel" not in lowered
 
-    def _latest_user_text(self, context: Any) -> str:
-        for message in reversed(context.get_messages()):
-            if message.get("role") == "user" and isinstance(message.get("content"), str):
-                return message["content"]
-        return ""
+    def _looks_like_reschedule(self, lowered: str) -> bool:
+        return any(word in lowered for word in ("reschedule", "move", "change my appointment"))
 
-    def _looks_like_booking_request(self, lowered: str) -> bool:
-        intent_words = ("schedule", "book", "appointment", "visit", "cleaning", "follow-up")
-        return any(word in lowered for word in intent_words)
+    def _looks_like_insurance(self, lowered: str) -> bool:
+        providers = ("delta dental", "metlife", "aetna", "cigna", "guardian")
+        return "insurance" in lowered or "coverage" in lowered or "covered" in lowered or any(
+            provider in lowered for provider in providers
+        )
+
+    def _extract_insurance_provider(self, lowered: str) -> str:
+        for provider in ("Delta Dental", "MetLife", "Aetna", "Cigna PPO", "Cigna", "Guardian"):
+            if provider.lower() in lowered:
+                return provider
+        return "that plan"
 
     def _is_confirmation(self, lowered: str) -> bool:
         return any(word in lowered for word in ("yes", "works", "sounds good", "please", "book it"))
 
-    def _book_pending(self) -> str:
-        result = TOOL_IMPLS["book_appointment"](self._pending_booking)
-        self._pending_booking = {}
-        confirmation_id = result.get("confirmation_id", "")
-        return (
-            f"Booked for {_format_fast_date(result['date'])} at {_format_fast_time(result['time'])}; "
-            f"confirmation {confirmation_id}."
-        )
+    def _is_greeting_only(self, lowered: str) -> bool:
+        return bool(re.fullmatch(r"(hi|hello|hey|hi aria|hi arya)[.!]?", lowered))
+
+    def _preferred_slot(self, slots: list[str]) -> str:
+        return "2:00 PM" if "2:00 PM" in slots else slots[0]
 
 
 def twilio_transport_overrides() -> dict[str, int]:
@@ -474,7 +757,7 @@ async def run_bot(
         audio_in_sample_rate: Input audio sample rate in Hz. Defaults to 16000 (WebRTC).
         audio_out_sample_rate: Output audio sample rate in Hz. Defaults to 24000 (WebRTC).
     """
-    logger.info("Starting bot")
+    logger.info("Starting bot3")
 
     tools = pipecat_tools_schema()
 
@@ -583,7 +866,7 @@ async def run_bot(
         observe_audio=True,
         finalize=True,
     )
-    appointment_fast_path = AppointmentFastPathProcessor()
+    front_desk_memory = MemoryFirstFrontDeskProcessor()
 
     # Pipeline - assembled from reusable components
     pipeline = Pipeline(
@@ -592,7 +875,7 @@ async def run_bot(
             stt,
             stage_transcript_logger,
             user_aggregator,
-            appointment_fast_path,
+            front_desk_memory,
             llm,
             stage_turn_logger,
             tts,
