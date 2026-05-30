@@ -1,0 +1,69 @@
+{
+  "run_id": "89028666",
+  "timestamp": 1780176177.7067368,
+  "mode": "voice",
+  "agent_source": "bot1 (/Users/pmui/dev/ideas/kittie/dental-voice-agent/server/bot1.py) at http://127.0.0.1:7861",
+  "agent_model": "nvidia/nemotron-3-super",
+  "caller_model": "nvidia/nemotron-3-super",
+  "judge_model": "nvidia/nemotron-3-super",
+  "caller_tts_provider": "gradium",
+  "transcribe_asr_url": "ws://44.241.251.184:8080",
+  "scenario_count": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "p95_agent_reply_ms": 21088,
+  "p95_latency_ms": 7918,
+  "live_latency": {
+    "path": "/Users/pmui/dev/ideas/kittie/dental-voice-agent/server/batch_eval_artifacts/20260530-142202-588d86/02-bot1/latency.jsonl",
+    "completed_turns": 2,
+    "p95_ttfa_ms": 629,
+    "p95_ttla_ms": 7918,
+    "p95_legacy_latency_ms": null
+  },
+  "scenarios": [
+    {
+      "id": "office_hours",
+      "passed": false,
+      "reason": "The agent said 'eight oh AM to five dollo PM' which contains a mispronunciation ('dollo' instead of 'five') and is not a clear, concise, and accurate delivery of the office hours as required.",
+      "turns": 5,
+      "duration_ms": 35984,
+      "p95_agent_reply_ms": 21088,
+      "agent_reply_ms": [
+        21556,
+        12203
+      ],
+      "tool_calls": [],
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I\u2019d like to know your office hours, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "Our office hours are Monday through Friday, eight oh AM to five dollo PM. Is there anything else I can help you with today? Please go ahead."
+        },
+        {
+          "speaker": "caller",
+          "text": "No, that\u2019s all I needed. Thank you!"
+        },
+        {
+          "speaker": "agent",
+          "text": "You're welcome. Have a great day."
+        }
+      ]
+    }
+  ],
+  "evaluated_agent": {
+    "bot": "bot1",
+    "bot_index": 2,
+    "bot_path": "/Users/pmui/dev/ideas/kittie/dental-voice-agent/server/bot1.py",
+    "bot_port": 7861,
+    "bot_url": "http://127.0.0.1:7861"
+  },
+  "bot": "bot1",
+  "bot_path": "/Users/pmui/dev/ideas/kittie/dental-voice-agent/server/bot1.py"
+}
