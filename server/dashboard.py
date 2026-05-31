@@ -1,4 +1,5 @@
 import json
+import shlex
 from collections import defaultdict
 from copy import deepcopy
 from datetime import UTC, date, datetime
@@ -16,6 +17,9 @@ KNOWN_CATEGORIES = [
     "call_closure",
 ]
 STATUS_OPTIONS = ["pass", "fail"]
+DEFAULT_BATCH_BOTS = ["bot0.py", "bot1.py", "bot2.py", "bot3.py"]
+DEFAULT_BATCH_BOT_IDS = [Path(bot).stem for bot in DEFAULT_BATCH_BOTS]
+BATCH_SCENARIO_IDS = [str(scenario["id"]) for scenario in SCENARIOS]
 
 
 def scenario_metadata_by_id() -> dict[str, dict[str, str]]:
@@ -151,6 +155,19 @@ def normalize_scenario_result(result: dict[str, Any]) -> dict[str, Any]:
         normalized["transcript"] = result.get("transcript") or []
     if "tool_calls" in result:
         normalized["tool_calls"] = result.get("tool_calls") or []
+    for key in (
+        "infrastructure_failure",
+        "judge_error",
+        "error_type",
+        "bot_url",
+        "port",
+        "run_id",
+        "voice_agent",
+        "artifacts",
+        "judge_policy",
+    ):
+        if key in result:
+            normalized[key] = result.get(key)
     return normalized
 
 
@@ -338,6 +355,303 @@ def normalize_latest_results(results: dict[str, Any] | None) -> dict[str, Any] |
         }
     )
     return normalized
+
+
+def normalize_batch_bot_summary(
+    bot_id: str,
+    raw_summary: dict[str, Any],
+    *,
+    index: int = 0,
+    batch_defaults: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    batch_defaults = batch_defaults or {}
+    scenarios = [
+        normalize_scenario_result(scenario)
+        for scenario in raw_summary.get("scenarios", [])
+        if isinstance(scenario, dict)
+    ]
+    scenario_count = safe_int(raw_summary.get("scenario_count"), len(scenarios))
+    passed_count = safe_int(
+        raw_summary.get("passed_count"),
+        sum(1 for scenario in scenarios if bool(scenario.get("passed"))),
+    )
+    failed_count = safe_int(raw_summary.get("failed_count"), max(scenario_count - passed_count, 0))
+    pass_rate = safe_float(
+        raw_summary.get("pass_rate"),
+        passed_count / scenario_count if scenario_count else 0.0,
+    )
+    voice_latency = normalize_voice_latency(raw_summary)
+    timestamp = parse_timestamp(
+        raw_summary.get("timestamp", batch_defaults.get("timestamp")),
+        raw_summary.get("timestamp_iso", batch_defaults.get("timestamp_iso")),
+    )
+
+    return {
+        **deepcopy(raw_summary),
+        "batch_id": str(raw_summary.get("batch_id") or batch_defaults.get("batch_id") or "batch"),
+        "timestamp": raw_summary.get("timestamp", batch_defaults.get("timestamp")),
+        "timestamp_iso": raw_summary.get("timestamp_iso")
+        or batch_defaults.get("timestamp_iso")
+        or (timestamp.isoformat() if timestamp else ""),
+        "timestamp_dt": timestamp,
+        "judge_policy": raw_summary.get("judge_policy") or batch_defaults.get("judge_policy") or {},
+        "bot_id": str(raw_summary.get("bot_id") or bot_id or f"bot-{index + 1}"),
+        "bot_name": str(raw_summary.get("bot_name") or raw_summary.get("bot_id") or bot_id),
+        "bot_path": str(raw_summary.get("bot_path") or ""),
+        "bot_resolved_path": str(raw_summary.get("bot_resolved_path") or ""),
+        "bot_sha256": str(raw_summary.get("bot_sha256") or ""),
+        "scenario_count": scenario_count,
+        "passed_count": passed_count,
+        "failed_count": failed_count,
+        "pass_rate": round(pass_rate, 3),
+        "judge_error_count": safe_int(raw_summary.get("judge_error_count")),
+        "infrastructure_failure_count": safe_int(raw_summary.get("infrastructure_failure_count")),
+        "voice_p95_latency_ms": voice_latency["ttfa_p95_ms"],
+        "voice_latency": voice_latency,
+        "wall_time_s": safe_float(raw_summary.get("wall_time_s")),
+        "artifact_dirs": raw_summary.get("artifact_dirs") if isinstance(raw_summary.get("artifact_dirs"), list) else [],
+        "artifact_paths": raw_summary.get("artifact_paths") if isinstance(raw_summary.get("artifact_paths"), dict) else {},
+        "category_summary": normalize_category_summary(raw_summary.get("category_summary"))
+        or build_category_summary_from_scenarios(scenarios),
+        "scenarios": scenarios,
+        "_source_index": index,
+    }
+
+
+def normalize_batch_results(results: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(results, dict) or not isinstance(results.get("bots"), dict):
+        return None
+
+    bots_raw = results["bots"]
+    bot_order = [
+        str(bot_id)
+        for bot_id in results.get("bot_order", [])
+        if str(bot_id) in bots_raw and isinstance(bots_raw.get(str(bot_id)), dict)
+    ]
+    for bot_id, raw_summary in bots_raw.items():
+        if isinstance(raw_summary, dict) and str(bot_id) not in bot_order:
+            bot_order.append(str(bot_id))
+
+    batch_defaults = {
+        "batch_id": results.get("batch_id"),
+        "timestamp": results.get("timestamp"),
+        "timestamp_iso": results.get("timestamp_iso"),
+        "judge_policy": results.get("judge_policy"),
+    }
+    bots = {
+        bot_id: normalize_batch_bot_summary(
+            bot_id,
+            bots_raw[bot_id],
+            index=index,
+            batch_defaults=batch_defaults,
+        )
+        for index, bot_id in enumerate(bot_order)
+        if isinstance(bots_raw.get(bot_id), dict)
+    }
+
+    scenario_order = [
+        str(scenario_id)
+        for scenario_id in results.get("scenario_order", [])
+        if scenario_id is not None
+    ]
+    if not scenario_order:
+        scenario_order = BATCH_SCENARIO_IDS
+
+    expected_scenario_count = len(SCENARIOS)
+    covered_scenarios = {
+        str(scenario.get("id"))
+        for summary in bots.values()
+        for scenario in summary.get("scenarios", [])
+        if scenario.get("id")
+    }
+    timestamp = parse_timestamp(results.get("timestamp"), results.get("timestamp_iso"))
+    task_count = safe_int(
+        results.get("task_count"),
+        sum(summary["scenario_count"] for summary in bots.values()),
+    )
+    passed_count = safe_int(
+        results.get("passed_count"),
+        sum(summary["passed_count"] for summary in bots.values()),
+    )
+
+    return {
+        **deepcopy(results),
+        "batch_id": str(results.get("batch_id", "batch")),
+        "timestamp": results.get("timestamp"),
+        "timestamp_iso": results.get("timestamp_iso") or (timestamp.isoformat() if timestamp else ""),
+        "timestamp_dt": timestamp,
+        "judge_policy": results.get("judge_policy") or {},
+        "bot_count": safe_int(results.get("bot_count"), len(bots)),
+        "scenario_count": safe_int(results.get("scenario_count"), len(scenario_order)),
+        "expected_scenario_count": expected_scenario_count,
+        "covered_scenario_count": len(covered_scenarios),
+        "coverage_rate": round(len(covered_scenarios) / expected_scenario_count, 3)
+        if expected_scenario_count
+        else 0.0,
+        "task_count": task_count,
+        "passed_count": passed_count,
+        "failed_count": max(task_count - passed_count, 0),
+        "pass_rate": round(safe_float(results.get("pass_rate"), passed_count / task_count if task_count else 0.0), 3),
+        "wall_time_s": safe_float(results.get("wall_time_s")),
+        "bot_order": bot_order,
+        "scenario_order": scenario_order,
+        "bots": bots,
+    }
+
+
+def normalize_batch_runs(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    normalized = [
+        normalize_batch_bot_summary(
+            str(row.get("bot_id") or f"bot-{index + 1}"),
+            row,
+            index=index,
+            batch_defaults=row,
+        )
+        for index, row in enumerate(rows)
+        if isinstance(row, dict)
+    ]
+    return sorted(
+        normalized,
+        key=lambda row: (
+            row["timestamp_dt"] or datetime.min.replace(tzinfo=UTC),
+            row.get("batch_id", ""),
+            row.get("bot_id", ""),
+            row["_source_index"],
+        ),
+    )
+
+
+def batch_bot_ids(batch_results: dict[str, Any] | None = None) -> list[str]:
+    ordered = list(DEFAULT_BATCH_BOT_IDS)
+    if batch_results:
+        for bot_id in batch_results.get("bot_order", []):
+            if bot_id not in ordered:
+                ordered.append(str(bot_id))
+    return ordered
+
+
+def build_batch_command(
+    bots: list[str] | None = None,
+    *,
+    max_workers: int | None = None,
+) -> str:
+    command = ["uv", "run", "python", "batch_eval_runner.py", "--bots", *(bots or DEFAULT_BATCH_BOTS)]
+    if max_workers is not None:
+        command.extend(["--max-workers", str(max_workers)])
+    return shlex.join(command)
+
+
+def build_batch_leaderboard(batch_results: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = []
+    for bot_id in batch_results.get("bot_order", []):
+        summary = batch_results.get("bots", {}).get(bot_id)
+        if not summary:
+            continue
+        latency = summary.get("voice_latency", {})
+        rows.append(
+            {
+                "bot": summary.get("bot_id", bot_id),
+                "path": summary.get("bot_path") or "n/a",
+                "pass_rate": summary.get("pass_rate", 0.0),
+                "passed": summary.get("passed_count", 0),
+                "failed": summary.get("failed_count", 0),
+                "scenarios": summary.get("scenario_count", 0),
+                "judge_errors": summary.get("judge_error_count", 0),
+                "infra_failures": summary.get("infrastructure_failure_count", 0),
+                "TTFA p50": latency.get("ttfa_p50_ms"),
+                "TTFA p95": latency.get("ttfa_p95_ms"),
+                "TTLA p50": latency.get("ttla_p50_ms"),
+                "TTLA p95": latency.get("ttla_p95_ms"),
+                "voice_turns": latency.get("completed_turns"),
+                "wall_time_s": summary.get("wall_time_s", 0.0),
+            }
+        )
+    return sorted(rows, key=lambda row: (-safe_float(row["pass_rate"]), str(row["bot"])))
+
+
+def scenario_status_for_batch(scenario: dict[str, Any] | None) -> str:
+    if not scenario:
+        return ""
+    if scenario.get("infrastructure_failure"):
+        return "INFRA"
+    if scenario.get("judge_error"):
+        return "JUDGE"
+    return "PASS" if scenario.get("passed") else "FAIL"
+
+
+def build_batch_scenario_matrix(batch_results: dict[str, Any]) -> list[dict[str, Any]]:
+    metadata = scenario_metadata_by_id()
+    bot_ids = batch_bot_ids(batch_results)
+    scenarios_by_bot = {
+        bot_id: {
+            str(scenario.get("id")): scenario
+            for scenario in summary.get("scenarios", [])
+            if scenario.get("id")
+        }
+        for bot_id, summary in batch_results.get("bots", {}).items()
+    }
+
+    rows = []
+    for scenario_id in BATCH_SCENARIO_IDS:
+        row = {
+            "scenario_id": scenario_id,
+            "category": metadata.get(scenario_id, {}).get("category", "uncategorized"),
+            "severity": metadata.get(scenario_id, {}).get("severity", "medium"),
+        }
+        for bot_id in bot_ids:
+            scenario = scenarios_by_bot.get(bot_id, {}).get(scenario_id)
+            row[bot_id] = scenario_status_for_batch(scenario)
+            row[f"{bot_id}_reason"] = compact_reason(str(scenario.get("reason", ""))) if scenario else ""
+        rows.append(row)
+    return rows
+
+
+def build_batch_category_rows(batch_results: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = []
+    for bot_id in batch_results.get("bot_order", []):
+        summary = batch_results.get("bots", {}).get(bot_id)
+        if not summary:
+            continue
+        for category, category_summary in sorted(summary.get("category_summary", {}).items()):
+            total = safe_int(category_summary.get("total"))
+            rows.append(
+                {
+                    "bot": bot_id,
+                    "category": category,
+                    "pass_rate": safe_float(category_summary.get("pass_rate")),
+                    "passed": safe_int(category_summary.get("passed")),
+                    "failed": safe_int(category_summary.get("failed")),
+                    "total": total,
+                }
+            )
+    return rows
+
+
+def build_batch_failure_details(batch_results: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = []
+    for bot_id in batch_results.get("bot_order", []):
+        summary = batch_results.get("bots", {}).get(bot_id)
+        if not summary:
+            continue
+        for scenario in summary.get("scenarios", []):
+            if scenario.get("passed"):
+                continue
+            artifacts = scenario.get("artifacts") if isinstance(scenario.get("artifacts"), dict) else {}
+            rows.append(
+                {
+                    "bot": bot_id,
+                    "scenario_id": scenario.get("id"),
+                    "category": scenario.get("category"),
+                    "severity": scenario.get("severity"),
+                    "status": scenario_status_for_batch(scenario),
+                    "reason": scenario.get("reason", ""),
+                    "transcript_turns": len(scenario.get("transcript") or []),
+                    "tool_calls": scenario.get("tool_call_count", 0),
+                    "eval_log": artifacts.get("eval_log", ""),
+                    "bot_log": artifacts.get("bot_log", ""),
+                }
+            )
+    return rows
 
 
 def latest_results_as_run(results: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -594,6 +908,18 @@ def format_latency(value: Any) -> str:
     return f"{safe_int(value)} ms" if value is not None else "n/a"
 
 
+def color_batch_status(value: str) -> str:
+    if value == "PASS":
+        return "background-color: #d7f0df; color: #134e2f"
+    if value == "FAIL":
+        return "background-color: #f8d7da; color: #842029"
+    if value == "INFRA":
+        return "background-color: #fff3cd; color: #664d03"
+    if value == "JUDGE":
+        return "background-color: #e2e3ff; color: #29276f"
+    return ""
+
+
 def compact_reason(reason: str, limit: int = 180) -> str:
     if len(reason) <= limit:
         return reason
@@ -637,11 +963,17 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Artifacts")
+        batch_results_path = st.text_input("Batch results", "batch_results.json")
+        batch_runs_path = st.text_input("Batch run history", "batch_runs.jsonl")
         results_path = st.text_input("Latest results", "results.json")
         runs_path = st.text_input("Run history", "runs.jsonl")
 
+    raw_batch_results = read_results(batch_results_path)
+    raw_batch_runs = read_jsonl(batch_runs_path)
     raw_runs = read_jsonl(runs_path)
     raw_results = read_results(results_path)
+    batch_results = normalize_batch_results(raw_batch_results)
+    batch_runs = normalize_batch_runs(raw_batch_runs)
     runs = normalize_runs(raw_runs)
     latest_results = normalize_latest_results(raw_results)
 
@@ -720,11 +1052,21 @@ def main() -> None:
             index=scenario_options.index(default_scenario) if default_scenario in scenario_options else 0,
         )
 
+    if batch_results is None:
+        st.info(
+            f"No batch results found at `{batch_results_path}`. "
+            "The multi-agent comparison appears after a batch eval run."
+        )
+    if not batch_runs:
+        st.info(
+            f"No batch run history found at `{batch_runs_path}`. "
+            "Batch trends appear after one or more batch eval runs."
+        )
     if not raw_runs:
         st.info(f"No run history found at `{runs_path}`. Trend views will appear after eval runs.")
     if raw_results is None:
         st.info(f"No latest results found at `{results_path}`. Latest-run transcript views are hidden.")
-    if not raw_runs and raw_results is None:
+    if batch_results is None and not raw_batch_runs and not raw_runs and raw_results is None:
         st.stop()
 
     latest_for_kpis = visible_runs[-1] if visible_runs else None
@@ -765,8 +1107,9 @@ def main() -> None:
     insight_cols[3].caption("Flaky Scenarios")
     insight_cols[3].write(", ".join(insights["flaky_scenarios"]) or "None")
 
-    trend_tab, matrix_tab, category_tab, latest_tab, drilldown_tab, raw_tab = st.tabs(
+    batch_tab, trend_tab, matrix_tab, category_tab, latest_tab, drilldown_tab, raw_tab = st.tabs(
         [
+            "Batch Comparison",
             "Trend",
             "Failure Matrix",
             "Category Health",
@@ -775,6 +1118,127 @@ def main() -> None:
             "Raw Artifacts",
         ]
     )
+
+    with batch_tab:
+        st.subheader("Four-Bot Voice Evaluation")
+        st.write(
+            "`batch_eval_runner.py` is the right generator for this dashboard because it "
+            "launches each bot/scenario pair in an isolated voice-agent process and emits "
+            "bot-level summaries. `eval_runner.py` remains the single-scenario worker used "
+            "inside those batch tasks."
+        )
+        st.code(build_batch_command(), language="bash")
+        st.caption(
+            "This command runs all scenarios from `scenarios.py`; do not pass `--limit` "
+            "when generating the full 25-conversation dashboard."
+        )
+        st.code(build_batch_command(max_workers=3), language="bash")
+        st.caption("Use the second form when local TTS/ASR capacity needs tighter concurrency.")
+
+        if batch_results is None:
+            st.warning("No batch results artifact is available yet.")
+        else:
+            best_bot = None
+            leaderboard_rows = build_batch_leaderboard(batch_results)
+            if leaderboard_rows:
+                best_bot = leaderboard_rows[0]
+            expected = batch_results["expected_scenario_count"]
+            coverage = batch_results["covered_scenario_count"]
+            infra_failures = sum(
+                summary.get("infrastructure_failure_count", 0)
+                for summary in batch_results.get("bots", {}).values()
+            )
+            judge_errors = sum(
+                summary.get("judge_error_count", 0)
+                for summary in batch_results.get("bots", {}).values()
+            )
+
+            batch_cols = st.columns(5)
+            batch_cols[0].metric("Batch Pass Rate", format_percent(batch_results["pass_rate"]))
+            batch_cols[1].metric("Best Bot", best_bot["bot"] if best_bot else "n/a")
+            batch_cols[2].metric("Scenario Coverage", f"{coverage}/{expected}")
+            batch_cols[3].metric("Infra Failures", str(infra_failures))
+            batch_cols[4].metric("Judge Errors", str(judge_errors))
+
+            st.caption(
+                f"Batch `{batch_results['batch_id']}` at "
+                f"{batch_results.get('timestamp_iso') or 'unknown time'}; "
+                f"{batch_results.get('bot_count', 0)} bot(s), "
+                f"{batch_results.get('scenario_count', 0)} selected scenario(s), "
+                f"{batch_results.get('task_count', 0)} task(s)."
+            )
+            if coverage < expected:
+                st.warning(
+                    f"This artifact covers {coverage} of {expected} configured scenarios. "
+                    "Run the full command above to populate the complete 25-conversation matrix."
+                )
+
+            st.subheader("Bot Leaderboard")
+            leaderboard_df = pd.DataFrame(leaderboard_rows)
+            if leaderboard_df.empty:
+                st.warning("No bot summaries are available in the batch artifact.")
+            else:
+                display_leaderboard = leaderboard_df.copy()
+                display_leaderboard["pass_rate"] = display_leaderboard["pass_rate"].map(
+                    format_percent
+                )
+                st.dataframe(display_leaderboard, use_container_width=True, hide_index=True)
+
+            st.subheader("25-Scenario Matrix")
+            matrix_rows = build_batch_scenario_matrix(batch_results)
+            matrix_df = pd.DataFrame(matrix_rows)
+            status_columns = [
+                bot_id for bot_id in batch_bot_ids(batch_results) if bot_id in matrix_df.columns
+            ]
+            visible_columns = ["scenario_id", "category", "severity", *status_columns]
+            st.dataframe(
+                matrix_df[visible_columns].style.map(color_batch_status, subset=status_columns),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            st.subheader("Category Breakdown")
+            category_rows = build_batch_category_rows(batch_results)
+            if category_rows:
+                category_df = pd.DataFrame(category_rows)
+                category_df["pass_rate_percent"] = category_df["pass_rate"] * 100
+                st.dataframe(category_df, use_container_width=True, hide_index=True)
+                st.bar_chart(category_df, x="category", y="pass_rate_percent", color="bot")
+            else:
+                st.info("No category summary is available for this batch.")
+
+            st.subheader("Failure Details")
+            failure_rows = build_batch_failure_details(batch_results)
+            if failure_rows:
+                st.dataframe(pd.DataFrame(failure_rows), use_container_width=True, hide_index=True)
+            else:
+                st.success("No failing batch tasks in the current artifact.")
+
+        st.subheader("Batch History")
+        if not batch_runs:
+            st.info("No batch history rows are available yet.")
+        else:
+            history_df = pd.DataFrame(
+                [
+                    {
+                        "batch_id": row["batch_id"],
+                        "timestamp": row["timestamp_iso"],
+                        "bot": row["bot_id"],
+                        "path": row["bot_path"] or "n/a",
+                        "pass_rate": row["pass_rate"],
+                        "pass_rate_percent": row["pass_rate"] * 100,
+                        "passed": row["passed_count"],
+                        "failed": row["failed_count"],
+                        "scenarios": row["scenario_count"],
+                        "infra_failures": row["infrastructure_failure_count"],
+                        "judge_errors": row["judge_error_count"],
+                        "TTFA p95": row["voice_latency"]["ttfa_p95_ms"],
+                        "TTLA p95": row["voice_latency"]["ttla_p95_ms"],
+                    }
+                    for row in batch_runs
+                ]
+            )
+            st.dataframe(history_df, use_container_width=True, hide_index=True)
 
     with trend_tab:
         if not run_filtered:
