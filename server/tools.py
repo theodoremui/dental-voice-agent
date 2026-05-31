@@ -6,9 +6,10 @@ You can check appointment availability, book appointments, reschedule appointmen
 check whether Delta Dental, MetLife, or Aetna are on the accepted insurance list.
 Rules:
 - You are on a phone call. Keep replies to 1-2 short sentences.
+- Sound warm, patient, and approachable while staying concise.
 - Ask one thing at a time.
 - Do not claim you can cancel appointments.
-- Do not confirm office hours; say the office will confirm current hours if asked.
+- Do not confirm office hours; say the office can confirm current hours if asked.
 - Never give medical, dental, diagnosis, treatment, or medication advice. For clinical
   questions, offer to book a visit.
 - If the caller describes an emergency such as severe pain, facial swelling, trauma, or
@@ -23,7 +24,7 @@ Rules:
 - If a requested time is not open, offer the closest open slot in one short
   sentence.
 - Never invent insurance coverage. If a plan is not in your known list, say the office
-  will confirm it.
+  can confirm it.
 - If the caller says goodbye or the call is complete, say a short goodbye and call
   end_call in the same turn.
 Accepted insurance known list: Delta Dental, MetLife, Aetna.
@@ -50,6 +51,8 @@ def build_system_instruction(
         f"{SYSTEM_PROMPT}\n"
         "Phone style:\n"
         "- Talk like a concise dental front-desk staff member, not a chatbot.\n"
+        '- Use polite wording like "I can help with that", "works best for you", '
+        'and "you\'re all set" when it fits naturally.\n'
         "- Skip filler openers and do not restate what the caller just said.\n"
         "- Responses are spoken aloud. No bullet points and no emojis.\n"
         '- Say appointment times naturally, like "two thirty PM", not "two point thirty".\n\n'
@@ -299,11 +302,11 @@ def _spoken_tool_response(name: str, arguments: dict[str, Any], result: dict[str
     if name == "check_availability":
         raw_slots = result.get("open_slots")
         if not isinstance(raw_slots, list) or not raw_slots:
-            return "I do not see open slots for that date. Would another day work?"
+            return "I'm sorry, I do not see open slots for that date. Would another day work?"
         preferred_slot = "2:00 PM" if "2:00 PM" in raw_slots else raw_slots[0]
         return (
-            f"{_spoken_time(preferred_slot)} on {_human_date(result.get('date'))} is open; "
-            "should I book it?"
+            f"{_spoken_time(preferred_slot)} on {_human_date(result.get('date'))} is open. "
+            "Should I book it?"
         )
 
     if name == "book_appointment":
@@ -312,24 +315,24 @@ def _spoken_tool_response(name: str, arguments: dict[str, Any], result: dict[str
         appointment_time = _spoken_time(result.get("time"))
         if confirmation_id:
             return (
-                f"Booked for {appointment_date} at {appointment_time}; "
-                f"confirmation {confirmation_id}."
+                f"You're all set for {appointment_date} at {appointment_time}. "
+                f"Your confirmation is {confirmation_id}."
             )
-        return "I could not complete that booking. The office can help finish it."
+        return "I'm sorry, I could not complete that booking. The office can help finish it."
 
     if name == "reschedule_appointment":
         if result.get("status") == "rescheduled":
             return (
-                f"You're rescheduled for {_human_date(result.get('date'))} "
+                f"You're all set. I moved it to {_human_date(result.get('date'))} "
                 f"at {_spoken_time(result.get('time'))}."
             )
-        return "I could not find that confirmation id. The office can help look it up."
+        return "I'm sorry, I could not find that confirmation id. The office can help look it up."
 
     if name == "check_insurance":
         provider = arguments.get("provider") or result.get("provider") or "that plan"
         if result.get("accepted"):
             return f"Yes, Bright Smile Dental accepts {provider}."
-        return f"The office will confirm {provider} coverage for you."
+        return f"The office can confirm {provider} coverage for you."
 
     return None
 

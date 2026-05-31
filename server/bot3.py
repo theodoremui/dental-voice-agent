@@ -102,6 +102,23 @@ WEEKDAYS = {
     "sunday": 6,
 }
 
+NUMBER_WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+}
+
+HOUR_TOKEN = r"1[0-2]|0?[1-9]|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve"
+
 
 def _env_float(name: str, default: float) -> float:
     raw_value = os.getenv(name)
@@ -198,15 +215,115 @@ def _extract_relative_or_absolute_date(text: str, today: date) -> str | None:
 
 def _extract_time(text: str) -> str | None:
     lowered = _normalize_text(text).lower().replace(".", "")
-    if re.search(r"\b(1|one)\s*(pm|p m)\b", lowered):
-        return "1:00 PM"
-    if re.search(r"\b(2|two)\s*(pm|p m)\b", lowered):
-        return "2:00 PM"
-    if re.search(r"\b(2:30|two thirty)\s*(pm|p m)?\b", lowered):
-        return "2:30 PM"
-    if re.search(r"\b(4|four)\s*(pm|p m)\b", lowered):
-        return "4:00 PM"
+    lowered = (
+        lowered.replace("o'clock", "oclock")
+        .replace("o clock", "oclock")
+        .replace("a m", "am")
+        .replace("p m", "pm")
+    )
+
+    numeric_time = re.search(
+        rf"\b(?P<hour>{HOUR_TOKEN})\s*:\s*(?P<minute>[0-5]\d)\s*(?P<meridiem>am|pm)?\b",
+        lowered,
+    )
+    if numeric_time:
+        hour = _parse_hour(numeric_time.group("hour"))
+        minute = int(numeric_time.group("minute"))
+        meridiem = _infer_meridiem(
+            hour,
+            lowered,
+            explicit=numeric_time.group("meridiem"),
+            has_oclock=False,
+            minute=minute,
+        )
+        if meridiem:
+            return _format_time_value(hour, minute, meridiem)
+
+    word_time = re.search(
+        rf"\b(?P<hour>{HOUR_TOKEN})[-\s]+(?P<minute_word>thirty|fifteen|forty five|forty-five|quarter)\s*(?P<meridiem>am|pm)?\b",
+        lowered,
+    )
+    if word_time:
+        hour = _parse_hour(word_time.group("hour"))
+        minute_word = word_time.group("minute_word").replace("-", " ")
+        minute = {
+            "fifteen": 15,
+            "quarter": 15,
+            "thirty": 30,
+            "forty five": 45,
+        }[minute_word]
+        meridiem = _infer_meridiem(
+            hour,
+            lowered,
+            explicit=word_time.group("meridiem"),
+            has_oclock=False,
+            minute=minute,
+        )
+        if meridiem:
+            return _format_time_value(hour, minute, meridiem)
+
+    hour_time = re.search(
+        rf"\b(?P<hour>{HOUR_TOKEN})\s*(?P<oclock>oclock)\s*(?P<meridiem>am|pm)?\b",
+        lowered,
+    )
+    if hour_time is None:
+        hour_time = re.search(
+            rf"\b(?:(?:at|for|around|about|by)\s+)?(?P<hour>{HOUR_TOKEN})\s*(?P<meridiem>am|pm)\b",
+            lowered,
+        )
+    if hour_time is None:
+        hour_time = re.search(
+            rf"\b(?:at|for|around|about|by)\s+(?P<hour>{HOUR_TOKEN})\b",
+            lowered,
+        )
+    if hour_time:
+        hour = _parse_hour(hour_time.group("hour"))
+        has_oclock = "oclock" in hour_time.groupdict() and bool(hour_time.groupdict()["oclock"])
+        explicit_meridiem = hour_time.groupdict().get("meridiem")
+        meridiem = _infer_meridiem(
+            hour,
+            lowered,
+            explicit=explicit_meridiem,
+            has_oclock=has_oclock,
+            minute=0,
+        )
+        if meridiem:
+            return _format_time_value(hour, 0, meridiem)
+
     return None
+
+
+def _parse_hour(raw_hour: str) -> int:
+    if raw_hour.isdigit():
+        return int(raw_hour)
+    return NUMBER_WORDS[raw_hour]
+
+
+def _infer_meridiem(
+    hour: int,
+    lowered: str,
+    *,
+    explicit: str | None,
+    has_oclock: bool,
+    minute: int,
+) -> str | None:
+    if explicit in {"am", "pm"}:
+        return explicit.upper()
+    if re.search(r"\b(morning|before noon)\b", lowered):
+        return "AM"
+    if re.search(r"\b(afternoon|evening|tonight|after lunch)\b", lowered):
+        return "PM"
+    if minute == 30 and hour == 2:
+        return "PM"
+    if has_oclock and 8 <= hour <= 11:
+        return "AM"
+    if has_oclock and 1 <= hour <= 7:
+        return "PM"
+    return None
+
+
+def _format_time_value(hour: int, minute: int, meridiem: str) -> str:
+    return f"{hour}:{minute:02d} {meridiem}"
 
 
 def _clean_name(candidate: str) -> str | None:
@@ -302,8 +419,15 @@ def _extract_confirmation_id(text: str) -> str | None:
     return re.sub(r"\s+", "", match.group(1)).upper()
 
 
-def _mentions_vague_afternoon(text: str) -> bool:
-    return bool(re.search(r"\b(afternoon|after lunch|later today)\b", _normalize_text(text).lower()))
+def _extract_vague_time_period(text: str) -> str | None:
+    lowered = _normalize_text(text).lower()
+    if re.search(r"\b(morning|before noon)\b", lowered):
+        return "morning"
+    if re.search(r"\b(afternoon|after lunch|later today)\b", lowered):
+        return "afternoon"
+    if re.search(r"\b(evening|tonight)\b", lowered):
+        return "evening"
+    return None
 
 
 def _looks_like_correction(text: str) -> bool:
@@ -320,12 +444,55 @@ def _format_fast_date(iso_date: str) -> str:
 
 
 def _format_fast_time(time_value: str) -> str:
-    return {
+    known = {
         "1:00 PM": "one PM",
         "2:00 PM": "two PM",
         "2:30 PM": "two thirty PM",
         "4:00 PM": "four PM",
-    }.get(time_value, time_value)
+        "9:00 AM": "nine AM",
+        "10:00 AM": "ten AM",
+    }
+    if time_value in known:
+        return known[time_value]
+
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})\s*(AM|PM)", time_value)
+    if not match:
+        return time_value
+    hour = int(match.group(1))
+    minute = int(match.group(2))
+    meridiem = match.group(3)
+    hour_words = {
+        1: "one",
+        2: "two",
+        3: "three",
+        4: "four",
+        5: "five",
+        6: "six",
+        7: "seven",
+        8: "eight",
+        9: "nine",
+        10: "ten",
+        11: "eleven",
+        12: "twelve",
+    }
+    if minute == 0:
+        return f"{hour_words.get(hour, str(hour))} {meridiem}"
+    if minute == 30:
+        return f"{hour_words.get(hour, str(hour))} thirty {meridiem}"
+    return time_value
+
+
+def _time_period(time_value: str) -> str | None:
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})\s*(AM|PM)", time_value)
+    if not match:
+        return None
+    hour = int(match.group(1))
+    meridiem = match.group(3)
+    if meridiem == "AM":
+        return "morning" if hour != 12 else "night"
+    if hour == 12 or 1 <= hour <= 4:
+        return "afternoon"
+    return "evening"
 
 
 def _format_slot_list(slots: list[str]) -> str:
@@ -347,11 +514,18 @@ class CallMemory:
     reschedule_confirmation_id: str = ""
     last_question: str = ""
     confirmation_id: str = ""
+    booking_completed: bool = False
+    booked_appointment_date: str = ""
+    booked_appointment_time: str = ""
+    booked_reason: str = ""
     vague_time_requested: bool = False
+    requested_time_period: str = ""
     wants_time_options: bool = False
     offered_slots: list[str] = field(default_factory=list)
 
     def has_booking_context(self) -> bool:
+        if self.booking_completed and self.intent != "booking":
+            return False
         return any(
             (
                 self.intent == "booking",
@@ -414,6 +588,11 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
         if self._looks_like_insurance(lowered):
             return self._insurance_response(lowered)
 
+        if self._memory.booking_completed:
+            post_booking_response = self._post_booking_response(lowered)
+            if post_booking_response:
+                return post_booking_response
+
         if self._looks_like_reschedule(lowered) or self._memory.intent == "reschedule":
             self._memory.intent = "reschedule"
             return self._reschedule_response()
@@ -445,6 +624,7 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
 
         if self._looks_like_booking(lowered):
             self._memory.intent = "booking"
+            self._memory.booking_completed = False
         if self._looks_like_reschedule(lowered):
             self._memory.intent = "reschedule"
 
@@ -460,6 +640,7 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
         if appointment_time:
             self._memory.appointment_time = appointment_time
             self._memory.vague_time_requested = False
+            self._memory.requested_time_period = ""
 
         reason = _extract_reason(normalized)
         if reason:
@@ -469,8 +650,10 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
         if confirmation_id:
             self._memory.reschedule_confirmation_id = confirmation_id
 
-        if _mentions_vague_afternoon(normalized) and not appointment_time:
+        requested_period = _extract_vague_time_period(normalized)
+        if requested_period and not appointment_time:
             self._memory.vague_time_requested = True
+            self._memory.requested_time_period = requested_period
         if any(phrase in lowered for phrase in ("what times", "which times", "options", "open slots")):
             self._memory.wants_time_options = True
 
@@ -490,24 +673,25 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
 
         if not self._memory.name:
             self._memory.last_question = "name"
-            return "May I have your name?"
+            return "I can help with that. May I have your name?"
         if not self._memory.reason:
             self._memory.last_question = "reason"
-            return "What is the reason for the visit?"
+            return "What brings you in for the visit?"
         if not self._memory.appointment_date:
             self._memory.last_question = "date"
-            return "What date would you like?"
+            return "What date works best for you?"
         if not self._memory.appointment_time:
             if self._memory.vague_time_requested and not self._memory.wants_time_options:
-                slots = self._available_slots()
-                self._memory.appointment_time = self._preferred_slot(slots) if slots else "2:00 PM"
-                self._memory.vague_time_requested = False
-                return self._book_from_memory()
+                return self._handle_vague_time_request()
             if self._memory.vague_time_requested or self._memory.offered_slots:
                 self._memory.last_question = "time"
                 return self._offer_slots()
             self._memory.last_question = "time"
-            return "What time would you like?"
+            return "What time works best for you?"
+
+        unavailable_response = self._unavailable_requested_time_response()
+        if unavailable_response:
+            return unavailable_response
 
         return self._book_from_memory()
 
@@ -516,13 +700,55 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
         raw_slots = result.get("open_slots") or []
         return [slot for slot in raw_slots if isinstance(slot, str)]
 
-    def _offer_slots(self) -> str:
-        self._memory.offered_slots = self._available_slots()
+    def _handle_vague_time_request(self) -> str:
+        slots = self._available_slots()
+        requested_period = self._memory.requested_time_period
+        matching_slots = [
+            slot for slot in slots if requested_period and _time_period(slot) == requested_period
+        ]
+
+        if matching_slots and not self._memory.wants_time_options:
+            self._memory.appointment_time = self._preferred_slot(matching_slots)
+            self._memory.vague_time_requested = False
+            self._memory.requested_time_period = ""
+            return self._book_from_memory()
+
+        if matching_slots:
+            return self._offer_slots(matching_slots)
+        if requested_period and slots:
+            self._memory.offered_slots = slots
+            self._memory.vague_time_requested = False
+            self._memory.requested_time_period = ""
+            return (
+                f"I'm sorry, I do not see {requested_period} slots on "
+                f"{_format_fast_date(self._memory.appointment_date)}. "
+                f"I have {_format_slot_list(slots)}. Which one works best for you?"
+            )
+        return self._offer_slots(slots)
+
+    def _unavailable_requested_time_response(self) -> str | None:
+        slots = self._available_slots()
+        if not slots or self._memory.appointment_time in slots:
+            return None
+
+        requested_time = self._memory.appointment_time
+        self._memory.appointment_time = ""
+        self._memory.offered_slots = slots
+        self._memory.vague_time_requested = False
+        self._memory.requested_time_period = ""
+        return (
+            f"I'm sorry, I do not see {_format_fast_time(requested_time)} available on "
+            f"{_format_fast_date(self._memory.appointment_date)}. "
+            f"I have {_format_slot_list(slots)}. Which one works best for you?"
+        )
+
+    def _offer_slots(self, slots: list[str] | None = None) -> str:
+        self._memory.offered_slots = slots if slots is not None else self._available_slots()
         if not self._memory.offered_slots:
-            return "I do not see open slots that day. Would another date work?"
+            return "I'm sorry, I do not see open slots that day. Would another date work?"
         return (
             f"I have {_format_slot_list(self._memory.offered_slots)} on "
-            f"{_format_fast_date(self._memory.appointment_date)}. Which works?"
+            f"{_format_fast_date(self._memory.appointment_date)}. Which one works best for you?"
         )
 
     def _book_from_memory(self) -> str:
@@ -535,25 +761,35 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
         result = TOOL_IMPLS["book_appointment"](booking)
         confirmation_id = str(result.get("confirmation_id", ""))
         self._memory.confirmation_id = confirmation_id
+        self._memory.reschedule_confirmation_id = confirmation_id
+        self._memory.booking_completed = True
+        self._memory.booked_appointment_date = str(result["date"])
+        self._memory.booked_appointment_time = str(result["time"])
+        self._memory.booked_reason = str(result["reason"])
         self._memory.intent = ""
+        self._memory.appointment_date = ""
+        self._memory.appointment_time = ""
+        self._memory.reason = ""
         self._memory.last_question = ""
         self._memory.offered_slots = []
         self._memory.wants_time_options = False
+        self._memory.vague_time_requested = False
+        self._memory.requested_time_period = ""
         return (
-            f"Booked for {_format_fast_date(result['date'])} at {_format_fast_time(result['time'])}. "
-            f"Confirmation {confirmation_id}."
+            f"You're all set for {_format_fast_date(result['date'])} "
+            f"at {_format_fast_time(result['time'])}. Your confirmation is {confirmation_id}."
         )
 
     def _reschedule_response(self) -> str:
         if not self._memory.reschedule_confirmation_id:
             self._memory.last_question = "confirmation_id"
-            return "What is your confirmation ID?"
+            return "I can help with that. What is your confirmation ID?"
         if not self._memory.appointment_date:
             self._memory.last_question = "date"
-            return "What date should I move it to?"
+            return "What date would you like me to move it to?"
         if not self._memory.appointment_time:
             self._memory.last_question = "time"
-            return "What time should I move it to?"
+            return "What time would you like me to move it to?"
 
         result = TOOL_IMPLS["reschedule_appointment"](
             {
@@ -564,32 +800,47 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
         )
         self._memory.intent = ""
         if result.get("status") == "rescheduled":
+            self._memory.booking_completed = True
+            self._memory.booked_appointment_date = str(result["date"])
+            self._memory.booked_appointment_time = str(result["time"])
+            self._memory.appointment_date = ""
+            self._memory.appointment_time = ""
             return (
-                f"You're rescheduled for {_format_fast_date(result['date'])} "
+                f"You're all set. I moved it to {_format_fast_date(result['date'])} "
                 f"at {_format_fast_time(result['time'])}."
             )
-        return "I could not find that confirmation ID. The office can help look it up."
+        return "I'm sorry, I could not find that confirmation ID. The office can help look it up."
 
     def _insurance_response(self, lowered: str) -> str:
         provider = self._extract_insurance_provider(lowered)
         result = TOOL_IMPLS["check_insurance"]({"provider": provider})
         if result.get("accepted"):
             return f"Yes, Bright Smile Dental accepts {provider}."
-        return f"The office will confirm {provider} coverage for you."
+        return f"The office can confirm {provider} coverage for you."
 
     def _policy_response(self, lowered: str) -> str | None:
         if any(word in lowered for word in ("severe pain", "facial swelling", "trauma", "bleeding heavily")):
-            return "Please seek emergency care first. I can also help schedule an urgent dental visit."
+            return "I'm sorry you're dealing with that. Please seek emergency care first, and I can also help schedule an urgent dental visit."
         if any(phrase in lowered for phrase in ("ibuprofen", "root canal", "diagnose", "what dose")):
-            return "I cannot give dental or medication advice, but I can help book a dentist visit."
+            return "I'm not able to give dental or medication advice, but I can help book a dentist visit."
         if "cancel" in lowered:
-            return "I cannot cancel appointments here. The office can help, or I can help reschedule."
+            return "I'm not able to cancel appointments here. The office can help, or I can help reschedule."
         if "hours" in lowered or "closes" in lowered or "open today" in lowered:
-            return "The office will confirm current hours for you."
+            return "The office can confirm current hours for you."
         if "phone number" in lowered or "pull up my chart" in lowered or "know who i am" in lowered:
-            return "I cannot identify you or pull up records from caller ID alone."
-        if "goodbye" in lowered or re.fullmatch(r"(bye|thanks bye|thank you bye)[.!]?", lowered):
-            return "Thanks for calling Bright Smile Dental. Goodbye."
+            return "I'm not able to identify you or pull up records from caller ID alone."
+        if self._is_goodbye(lowered):
+            return "Thanks for calling Bright Smile Dental. Have a good day."
+        return None
+
+    def _post_booking_response(self, lowered: str) -> str | None:
+        if self._looks_like_post_booking_change(lowered):
+            self._memory.intent = "reschedule"
+            if not self._memory.appointment_date:
+                self._memory.appointment_date = self._memory.booked_appointment_date
+            return self._reschedule_response()
+        if self._is_post_booking_acknowledgement(lowered):
+            return "You're very welcome."
         return None
 
     def _looks_like_booking(self, lowered: str) -> bool:
@@ -611,6 +862,21 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
     def _looks_like_reschedule(self, lowered: str) -> bool:
         return any(word in lowered for word in ("reschedule", "move", "change my appointment"))
 
+    def _looks_like_post_booking_change(self, lowered: str) -> bool:
+        if not (self._memory.appointment_date or self._memory.appointment_time):
+            return False
+        change_words = (
+            "actually",
+            "instead",
+            "change",
+            "move",
+            "switch",
+            "make it",
+            "can we do",
+            "could we do",
+        )
+        return any(phrase in lowered for phrase in change_words)
+
     def _looks_like_insurance(self, lowered: str) -> bool:
         providers = ("delta dental", "metlife", "aetna", "cigna", "guardian")
         return "insurance" in lowered or "coverage" in lowered or "covered" in lowered or any(
@@ -625,6 +891,24 @@ class MemoryFirstFrontDeskProcessor(FrameProcessor):
 
     def _is_confirmation(self, lowered: str) -> bool:
         return any(word in lowered for word in ("yes", "works", "sounds good", "please", "book it"))
+
+    def _is_goodbye(self, lowered: str) -> bool:
+        return bool(
+            re.search(
+                r"\b(goodbye|bye|bye now|talk to you later|that'?s all|that is all|all set)\b",
+                lowered,
+            )
+        )
+
+    def _is_post_booking_acknowledgement(self, lowered: str) -> bool:
+        if self._looks_like_booking(lowered) or self._looks_like_reschedule(lowered):
+            return False
+        return bool(
+            re.search(
+                r"\b(thanks|thank you|appreciate it|awesome|great|perfect|excellent|ok|okay)\b",
+                lowered,
+            )
+        )
 
     def _is_greeting_only(self, lowered: str) -> bool:
         return bool(re.fullmatch(r"(hi|hello|hey|hi aria|hi arya)[.!]?", lowered))
