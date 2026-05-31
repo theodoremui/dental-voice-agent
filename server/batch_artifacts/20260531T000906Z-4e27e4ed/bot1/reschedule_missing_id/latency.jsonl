@@ -1,0 +1,8 @@
+{"ts":1780186703.235156,"turn_id":1,"status":"complete","audio_frames":42,"audio_bytes":80640,"ttfa_ms":1308,"ttla_ms":2947,"audio_duration_ms":1639}
+{"ts":1780186713.2270248,"turn_id":2,"status":"interrupted","audio_frames":0,"audio_bytes":0}
+{"ts":1780186738.9454641,"turn_id":3,"status":"complete","audio_frames":594,"audio_bytes":1140480,"ttfa_ms":417,"ttla_ms":24136,"audio_duration_ms":23719}
+{"ts":1780186776.4672,"turn_id":4,"status":"complete","audio_frames":182,"audio_bytes":349440,"ttfa_ms":11749,"ttla_ms":18990,"audio_duration_ms":7241}
+{"ts":1780186795.685261,"turn_id":5,"status":"complete","audio_frames":128,"audio_bytes":245760,"ttfa_ms":741,"ttla_ms":5821,"audio_duration_ms":5080}
+{"ts":1780186812.610496,"turn_id":6,"status":"complete","audio_frames":112,"audio_bytes":215040,"ttfa_ms":516,"ttla_ms":4958,"audio_duration_ms":4441}
+{"ts":1780186821.8322802,"turn_id":7,"status":"interrupted","audio_frames":0,"audio_bytes":0}
+{"ts":1780186837.94799,"turn_id":8,"status":"complete","audio_frames":188,"audio_bytes":360960,"ttfa_ms":3205,"ttla_ms":10687,"audio_duration_ms":7482}

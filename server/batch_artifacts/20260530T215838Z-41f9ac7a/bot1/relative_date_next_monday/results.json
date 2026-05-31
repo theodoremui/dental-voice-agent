@@ -1,0 +1,44 @@
+{
+  "run_id": "dde2c2bb",
+  "timestamp": 1780178349.8530061,
+  "timestamp_iso": "2026-05-30T21:59:09Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": null,
+  "voice_latency": null,
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "relative_date_next_monday",
+      "passed": false,
+      "reason": "Voice eval failed before judging: ConnectionRefusedError: [Errno 61] Connect call failed ('192.168.7.228', 8081)",
+      "turn_count": 0,
+      "transcript": [],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7871",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7871",
+    "port": 7871,
+    "command": "uv run bot1.py --host localhost --port 7871",
+    "batch_id": "20260530T215838Z-41f9ac7a"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "run_id": "60d3f0dc",
+  "timestamp": 1780178980.489023,
+  "timestamp_iso": "2026-05-30T22:09:40Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": 421,
+  "voice_latency": {
+    "ttfa_p95_ms": 421,
+    "ttla_p95_ms": 6257
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "happy_booking_cleaning_next_tuesday",
+      "passed": false,
+      "reason": "The agent did not verify availability, did not confirm the booking, and never provided a confirmation ID, so the required outcome was not achieved.",
+      "turn_count": 7,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, this"
+        },
+        {
+          "speaker": "agent",
+          "text": "Hello, how can I help you today"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I'd like to schedule a routine cleaning for next Tuesday afternoon, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "What time in the afternoon would you prefer for your cleaning? Sure, could you please provide your name and what specific time you'd like for your routine cleaning next Tuesday afternoon"
+        },
+        {
+          "speaker": "caller",
+          "text": "My name is Maria Lopez,"
+        },
+        {
+          "speaker": "agent",
+          "text": "Got it, Maria. What specific time in the afternoon would you like for your routine cleaning next Tuesday"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7867",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7867",
+    "port": 7867,
+    "command": "uv run bot1.py --host localhost --port 7867",
+    "batch_id": "20260530T220717Z-0bc4fad9"
+  }
+}

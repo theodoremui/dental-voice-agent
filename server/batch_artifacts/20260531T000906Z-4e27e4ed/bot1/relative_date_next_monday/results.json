@@ -1,0 +1,68 @@
+{
+  "run_id": "49d2bc44",
+  "timestamp": 1780186683.818592,
+  "timestamp_iso": "2026-05-31T00:18:03Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": 331,
+  "voice_latency": {
+    "ttfa_p95_ms": 331,
+    "ttla_p95_ms": 4419
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "relative_date_next_monday",
+      "passed": false,
+      "reason": "No evaluator output was provided to convert.",
+      "turn_count": 4,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hello, I\u2019d"
+        },
+        {
+          "speaker": "agent",
+          "text": "Hi there, how can I assist you today"
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to schedule an appointment for next Monday at 4\u202fPM for a chipped filling."
+        },
+        {
+          "speaker": "agent",
+          "text": "Or two PM on Monday, June one is open. Should I book it"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7890",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7890",
+    "port": 7890,
+    "command": "uv run bot1.py --host localhost --port 7890",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

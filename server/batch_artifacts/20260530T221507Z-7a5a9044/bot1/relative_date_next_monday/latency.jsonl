@@ -1,0 +1,3 @@
+{"ts":1780179414.693739,"turn_id":1,"status":"interrupted","audio_frames":0,"audio_bytes":0}
+{"ts":1780179424.51442,"turn_id":2,"status":"complete","audio_frames":80,"audio_bytes":153600,"ttfa_ms":1764,"ttla_ms":4925,"audio_duration_ms":3161}
+{"ts":1780179454.487535,"turn_id":3,"status":"complete","audio_frames":70,"audio_bytes":134400,"ttfa_ms":10680,"ttla_ms":13441,"audio_duration_ms":2761}

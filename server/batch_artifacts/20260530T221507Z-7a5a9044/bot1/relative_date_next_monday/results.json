@@ -1,0 +1,72 @@
+{
+  "run_id": "1a5cf5f6",
+  "timestamp": 1780179470.240872,
+  "timestamp_iso": "2026-05-30T22:17:50Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 1,
+  "failed_count": 0,
+  "pass_rate": 1.0,
+  "voice_p95_latency_ms": 10680,
+  "voice_latency": {
+    "ttfa_p95_ms": 10680,
+    "ttla_p95_ms": 13441
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "relative_date_next_monday",
+      "passed": true,
+      "reason": "Agent confirmed the requested 4\u202fPM slot for next Monday without inventing a premature confirmation.",
+      "turn_count": 5,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I\u2019d like to schedule an appointment for next Monday at 4\u202fPM for a chipped filling."
+        },
+        {
+          "speaker": "agent",
+          "text": "Sure, I can help with that. May I have your name please"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I\u2019d like to schedule an appointment for next Monday at 4\u202fPM for a chipped filling."
+        },
+        {
+          "speaker": "agent",
+          "text": "Could you please tell me your name so I can book the appointment? Great. We have four point zero PM available on Monday, June first. May I have your name please"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7871",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7871",
+    "port": 7871,
+    "command": "uv run bot1.py --host localhost --port 7871",
+    "batch_id": "20260530T221507Z-7a5a9044"
+  }
+}

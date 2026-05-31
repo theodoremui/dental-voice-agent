@@ -1,0 +1,104 @@
+{
+  "run_id": "7481d2b3",
+  "timestamp": 1780186843.3502579,
+  "timestamp_iso": "2026-05-31T00:20:43Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 1,
+  "failed_count": 0,
+  "pass_rate": 1.0,
+  "voice_p95_latency_ms": 11749,
+  "voice_latency": {
+    "ttfa_p95_ms": 11749,
+    "ttla_p95_ms": 24136
+  },
+  "category_summary": {
+    "rescheduling": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "reschedule_missing_id",
+      "passed": true,
+      "reason": "The agent asked for the confirmation ID and did not invent or assume one, satisfying the success criteria.",
+      "turn_count": 13,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I need to reschedule my appointment but I can\u2019t find my confirmation ID. Could you look it up for me?"
+        },
+        {
+          "speaker": "agent",
+          "text": "How can I help you today?"
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to reschedule my appointment; could you please look up my confirmation ID so we can proceed?"
+        },
+        {
+          "speaker": "agent",
+          "text": "I understand you'd like to reschedule your appointment to use our rescheduling system. I do need your confirmation ID. If you can't find it, you might check your appointment confirmation email or text message from Brightsmile Dental. Alternatively, I can help you book a new appointment if that would work better for you. Would you like to try finding your confirmation ID? Or shall we book a new appointment instead"
+        },
+        {
+          "speaker": "caller",
+          "text": "Sure, let me check my email and text for the confirmation ID and I\u2019ll get back to you in a moment"
+        },
+        {
+          "speaker": "agent",
+          "text": "No problem. Take your time and let me know when you have the confirmation ID or if you'd like to book a new appointment instead."
+        },
+        {
+          "speaker": "caller",
+          "text": "I found"
+        },
+        {
+          "speaker": "agent",
+          "text": "Great, please provide your confirmation ID so I can help you reschedule your appointment"
+        },
+        {
+          "speaker": "caller",
+          "text": "My confirmation ID is\u202fBRIGHT\u20114829."
+        },
+        {
+          "speaker": "agent",
+          "text": "Sure I can help you reschedule. What date would you like to move your appointment to"
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to move it to Thursday, June\u202f13th at 2\u202fpm, please.  \n\nThank you!"
+        },
+        {
+          "speaker": "agent",
+          "text": "Just to confirm, you'd like to reschedule to Saturday, June thirteenth, twenty twenty six at two point zero PM."
+        }
+      ],
+      "tool_calls": [],
+      "category": "rescheduling",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7894",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7894",
+    "port": 7894,
+    "command": "uv run bot1.py --host localhost --port 7894",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

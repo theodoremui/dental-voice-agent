@@ -1,0 +1,2 @@
+Create an evaluation harness using Cekura : https://docs.cekura.ai/documentation/introduction by carefully studying what is the simplest way to leverage the existing 25 senarios in "scenarios.py".  The CEKURA_API_KEY is in the local ".env" file to access the Cekura evaluation service.  Create a tutorial on Cekura in the "docs" folder with step-by-step explanation as well as clear definition and explanation for every key concepts.
+ 

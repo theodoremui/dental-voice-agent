@@ -1,0 +1,96 @@
+{
+  "run_id": "27d60f61",
+  "timestamp": 1780187220.740813,
+  "timestamp_iso": "2026-05-31T00:27:00Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": 394,
+  "voice_latency": {
+    "ttfa_p95_ms": 394,
+    "ttla_p95_ms": 1592
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "ambiguous_time_afternoon",
+      "passed": false,
+      "reason": "The agent never asked about or provided any specific afternoon time availability, so it did not check availability and obtain a specific time before booking.",
+      "turn_count": 11,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I\u2019d like to schedule an appointment for this afternoon. Could you let me know what times you have available?"
+        },
+        {
+          "speaker": "agent",
+          "text": "May I have your name"
+        },
+        {
+          "speaker": "caller",
+          "text": "Taylor Brooks."
+        },
+        {
+          "speaker": "agent",
+          "text": "What date would you like?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Today, if you have any afternoon slots available."
+        },
+        {
+          "speaker": "agent",
+          "text": "What date would you like?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Today, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "What date would you like"
+        },
+        {
+          "speaker": "caller",
+          "text": "Today."
+        },
+        {
+          "speaker": "agent",
+          "text": "What date would you like"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7917",
+  "voice_agent": {
+    "name": "bot2",
+    "passed_path": "bot2.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+    "sha256": "67805872122ad7f6761cc973cccd14bce68fd8002f6347de62ecb12ce2f58b52",
+    "bot_url": "http://localhost:7917",
+    "port": 7917,
+    "command": "uv run bot2.py --host localhost --port 7917",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

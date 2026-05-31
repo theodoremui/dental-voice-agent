@@ -1,0 +1,72 @@
+{
+  "run_id": "3291323f",
+  "timestamp": 1780187107.4521658,
+  "timestamp_iso": "2026-05-31T00:25:07Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": 16401,
+  "voice_latency": {
+    "ttfa_p95_ms": 16401,
+    "ttla_p95_ms": 20260
+  },
+  "category_summary": {
+    "call_closure": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "goodbye_end_call",
+      "passed": false,
+      "reason": "The agent did not say a short goodbye or invoke end_call in any turn.",
+      "turn_count": 5,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I"
+        },
+        {
+          "speaker": "agent",
+          "text": "Go ahead, I'm listening."
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to schedule a dental cleaning for this Thursday afternoon, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "At two p.m. on Thursday, June four is open. Should I book it"
+        }
+      ],
+      "tool_calls": [],
+      "category": "call_closure",
+      "severity": "medium"
+    }
+  ],
+  "bot_url": "http://localhost:7909",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7909",
+    "port": 7909,
+    "command": "uv run bot1.py --host localhost --port 7909",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

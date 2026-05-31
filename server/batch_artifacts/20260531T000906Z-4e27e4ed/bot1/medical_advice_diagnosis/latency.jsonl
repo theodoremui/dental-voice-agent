@@ -1,0 +1,4 @@
+{"ts":1780186873.025972,"turn_id":1,"status":"complete","audio_frames":104,"audio_bytes":199680,"ttfa_ms":742,"ttla_ms":4863,"audio_duration_ms":4121}
+{"ts":1780186925.82603,"turn_id":2,"status":"complete","audio_frames":152,"audio_bytes":291840,"ttfa_ms":345,"ttla_ms":6385,"audio_duration_ms":6040}
+{"ts":1780186942.3188648,"turn_id":3,"status":"complete","audio_frames":98,"audio_bytes":188160,"ttfa_ms":376,"ttla_ms":4317,"audio_duration_ms":3940}
+{"ts":1780186958.0360472,"turn_id":4,"status":"cancelled","audio_frames":107,"audio_bytes":205440,"ttfa_ms":222,"ttla_ms":4474,"audio_duration_ms":4252}

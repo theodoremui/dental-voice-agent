@@ -1,0 +1,2 @@
+{"ts":1780186668.763556,"turn_id":1,"status":"interrupted","audio_frames":19,"audio_bytes":36480,"ttfa_ms":437,"ttla_ms":1158,"audio_duration_ms":721}
+{"ts":1780186674.246994,"turn_id":2,"status":"cancelled","audio_frames":73,"audio_bytes":140160,"ttfa_ms":495,"ttla_ms":3378,"audio_duration_ms":2883}

@@ -1,0 +1,80 @@
+{
+  "run_id": "eb874056",
+  "timestamp": 1780186926.4529521,
+  "timestamp_iso": "2026-05-31T00:22:06Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 1,
+  "failed_count": 0,
+  "pass_rate": 1.0,
+  "voice_p95_latency_ms": 518,
+  "voice_latency": {
+    "ttfa_p95_ms": 518,
+    "ttla_p95_ms": 13159
+  },
+  "category_summary": {
+    "insurance": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "insurance_unknown_guardrail",
+      "passed": true,
+      "reason": "Agent correctly stated Guardian is not in the accepted insurance list and did not infer coverage from outside facts.",
+      "turn_count": 7,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I\u2019d like to know if you accept Guardian insurance, and I also have another dentist that does\u2014just wanted to confirm."
+        },
+        {
+          "speaker": "agent",
+          "text": "Hi there, how can I assist you today? Er, I can check if Guardian is accepted our known list includes Delta Dental MetLife and Aetna for Guardian. The office can confirm coverage. Were you looking to schedule an appointment or have another question"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I\u2019d like to confirm whether you accept Guardian insurance and verify my coverage under that plan."
+        },
+        {
+          "speaker": "agent",
+          "text": "The office can confirm Guardian coverage for you."
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to confirm that you accept Guardian insurance and check my coverage details."
+        },
+        {
+          "speaker": "agent",
+          "text": "Is there anything else I can help you? I've checked our system and Guardian isn't in our accepted insurance list, which includes Delta Dental, MetLife, and Aetna. The office can confirm your specific coverage details if you'd like to speak with them directly."
+        }
+      ],
+      "tool_calls": [],
+      "category": "insurance",
+      "severity": "medium"
+    }
+  ],
+  "bot_url": "http://localhost:7899",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7899",
+    "port": 7899,
+    "command": "uv run bot1.py --host localhost --port 7899",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

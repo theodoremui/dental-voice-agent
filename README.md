@@ -1,238 +1,258 @@
-# YC Voice Agents Hackathon
+# Bright Smile Dental Voice Agent
 
-Welcome to the YC Voice Agents Hackathon, hosted by [Cekura](https://cekura.com) and [Daily](https://daily.co), in partnership with [NVIDIA](https://nvidia.com), [AWS](https://aws.amazon.com), and [Twilio](https://twilio.com).
+Bright Smile Dental Voice Agent is a front-desk voice assistant for a dental
+office. The agent, Aria, answers routine calls over browser WebRTC or Twilio,
+helps callers book and reschedule appointments, checks a small accepted-insurance
+list, and routes clinical or emergency questions safely.
 
-The goal of this event is to learn about building, scaling, evaluating, and continuously improving voice agents.
+This repository has been evolving from a hackathon starter into a more reliable
+and faster voice-agent system. The numbered bots in `server/` are not separate
+products. They are a deliberate optimization sequence:
 
-## Schedule, rules, and prizes
+- `bot0.py`: prove the full voice stack works end to end.
+- `bot1.py`: make caller-perceived latency measurable.
+- `bot2.py`: tune the runtime path and add a narrow deterministic booking path.
+- `bot3.py`: move common front-desk workflows into short-lived call memory, with
+  the LLM as fallback.
 
-This is a one-day event. Please arrive by 8:30. We'll kick things off at 9:00.
+The strategic goal is not just to make the model answer better. It is to make the
+whole call experience dependable: faster first responses, fewer missed user
+turns, safer business-rule handling, and clearer evidence about why a call passed
+or failed.
 
-### Schedule
+## Executive Summary
 
-  - 8:00 AM – Doors open & registration
-  - 8:30 AM – Breakfast
-  - 9:00 AM – Welcome / Hackathon begins
-  - 12:00 PM – Lunch
-  - 6:00 PM – Submissions due
-  - 6:00 - 8:00 PM – Dinner, demos, and conversation
-  - 8:00 PM – Judges' presentations
-  - 9:00 PM – We all go home
+We have been optimizing Bright Smile around one core product question:
 
-### General guidance
+> Can a caller complete safe front-desk dental work quickly, without the agent
+> inventing authority, losing context, or making the caller wait too long?
 
-First of all, please respect the YC space. We very much appreciate YC hosting these events. Stay in the designated areas, clean up after meals, and in general be a good guest.
+The work across `bot0.py`, `bot1.py`, `bot2.py`, and `bot3.py` has focused on
+five reliability and speed levers:
 
-Build something new for this hackathon. Use the tools from Cekura to evaluate and improve the performance of what you build. Use Pipecat as the orchestration framework for your voice agent. We also encourage you to use the open source models from NVIDIA, but it's okay to use any models that work well for your project.
+1. **End-to-end baseline reliability.** `bot0.py` establishes the production
+   shape: speech-to-text, turn aggregation, Nemotron LLM, Gradium text-to-speech,
+   tool-backed appointment actions, browser calls, and Twilio calls.
 
-There will be engineers from Cekura, Daily, NVIDIA, AWS, and Twilio available to help you with your project. Don't hesitate to find us.
+2. **Measurement before rewriting.** `bot1.py` adds voice latency logging so the
+   team can distinguish "the agent feels slow" from specific problems such as
+   VAD delay, transcript finalization, LLM response time, tool latency, or TTS
+   startup.
 
-Judging will start at 6:00. In general, the judges want to showcase interesting projects rather than just pick winners. So don't worry too much about what the judges are looking for in a project. Build something that demonstrates creativity, is interesting on a technical level, or solves a real problem! But do keep in mind that the judges want to see great examples of using Cekura to improve voice agent performance, and using open source models from NVIDIA.
+3. **Lower latency for predictable work.** `bot2.py` adds stage visibility and a
+   narrow appointment fast path. Simple bookings should not always wait for a
+   full LLM tool-use cycle when the requested workflow is structured and safe.
 
+4. **Stateful front-desk behavior.** `bot3.py` adds short-lived call memory so
+   Aria can remember what the caller already said, handle corrections, offer
+   appointment slots, reschedule safely, and answer common policy questions
+   consistently.
 
-# Tech stack and starting points.
+5. **Evaluation-driven tradeoffs.** The batch evaluation harness compares bot
+   versions by pass rate, failing scenario IDs, judge reasons, infrastructure
+   failures, and voice latency. A bot is better only if it improves task success
+   without making the live call feel worse.
 
-This repo contains two versions of a voice agent built with [Pipecat](https://pipecat.ai).
+The direction is clear: keep the LLM for language flexibility, but move stable
+business workflows into observable tools, deterministic processors, and per-call
+memory. This reduces latency, reduces hallucination risk, and makes failures
+debuggable.
 
-The demo bot **Field & Flower** is a neighborhood flower shop: callers order a bouquet for delivery while the bot looks up the catalog, captures delivery details, and places the order. All backend calls are mocked, so the starter runs with nothing but AI service keys.
+## Product Goal
 
-## Version 1 — GPT-4.1
+Bright Smile needs a voice agent that behaves like a competent front desk, not a
+general medical assistant. Aria should:
 
-You can start with this before the hackathon, if you want to. Or test GPT-4.1 and Nemotron side-by-side during the hackathon, using Cekura.
+- Greet callers naturally.
+- Book appointments after collecting the required details.
+- Reschedule appointments only when the caller has a valid confirmation ID.
+- Check known accepted insurance providers.
+- Decline unsupported actions such as cancellation.
+- Avoid medical, dental, diagnosis, treatment, and medication advice.
+- Route urgent symptoms toward emergency care first.
+- Keep turns short and spoken, with one question at a time.
 
-This bot only requires a Gradium API key and an OpenAI API key. Sign up for free at [Gradium](https://gradium.ai). We'll provide a code for Gradium credits, during the event.
+The agent is intentionally bounded. Reliability comes from knowing what Aria can
+do, what must be tool-backed, and what must be refused or escalated.
 
-- **STT:** [Gradium](https://gradium.ai)
-- **LLM:** [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) (GPT-4.1)
-- **TTS:** [Gradium](https://gradium.ai)
-- **Transports:** SmallWebRTC (local dev) and [Twilio](https://www.twilio.com/en-us) (production telephony)
-- **Deploy target:** [Pipecat Cloud](https://pipecat.daily.co)
+## Reliability Strategy
 
-## Version 2
+### Tools Own Business State
 
-NVIDIA models hosted on AWS, available during the hackathon.
+The model can talk, but bookings and reschedules must go through backend tools.
+That keeps the agent from saying "you are booked" unless the system has actually
+created a confirmation.
 
-```
-  export NVIDIA_ASR_URL=ws://44.241.251.184:8080
-  export NEMOTRON_LLM_URL=http://nemotron-fleet-alb-1322439314.us-west-2.elb.amazonaws.com/v1
-  export NEMOTRON_LLM_MODEL=nvidia/nemotron-3-super
-  ```
+The same principle applies to insurance. The accepted list is intentionally
+small. Unknown providers should be handled as "the office can confirm," not as a
+guessed yes.
 
-- **STT:** [Nemotron Speech Streaming](https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b)
-- **LLM:** [Nemotron 3 Super 120B](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16)
-- **TTS:** [Gradium](https://gradium.ai)
-- **Transports:** SmallWebRTC (local dev) and Twilio (production telephony)
-- **Deploy target:** [Pipecat Cloud](https://pipecat.daily.co)
+### Voice Quality Is A Runtime Problem
 
-## Develop locally
+A voice agent fails differently from a text chatbot. It can be wrong because the
+model misunderstood the task, but it can also be wrong because:
 
-Get the bot running over WebRTC in your browser before you push to the cloud or wire up the phone, for a faster iteration loop.
+- VAD waited too long or stopped too early.
+- STT finalized the wrong transcript.
+- The caller interrupted the agent.
+- The LLM took too long to produce a usable answer.
+- TTS startup made the response feel delayed.
 
-### Prerequisites
+That is why the later bots add latency and stage logging. The team needs to know
+where time and uncertainty enter the call path.
 
-- Python 3.11+
-- [`uv`](https://docs.astral.sh/uv/getting-started/installation/) package manager
-- API keys for [OpenAI](https://platform.openai.com) and [Gradium](https://gradium.ai)
+### Deterministic Paths Should Stay Narrow
 
-### Setup
+Common front-desk workflows are predictable enough to optimize. Appointment
+booking, slot selection, rescheduling with a confirmation ID, insurance checks,
+and safe refusal language do not need unlimited model freedom every turn.
 
-1. **Clone and enter the server directory:**
+The rule is: deterministic logic should handle what it knows, use the same tools
+as the LLM path, and hand back to the LLM when the caller says something outside
+the tested workflow.
 
-   ```bash
-   git clone https://github.com/pipecat-ai/yc-voice-agents-hackathon.git
-   cd yc-voice-agents-hackathon/server
-   ```
+### Memory Is Per Call, Not Identity
 
-2. **Configure API keys:**
+`bot3.py` remembers details inside a single conversation: name, reason, date,
+time, confirmation ID, offered slots, and the last question asked. That makes the
+agent feel more competent because it stops asking for information the caller
+already gave.
 
-   ```bash
-   cp .env.example .env
-   # Edit .env and fill in OPENAI_API_KEY, GRADIUM_API_KEY.
-   # TWILIO_* keys are only needed when you wire up the phone (next section).
-   ```
+This is not patient identity. Caller ID is for logging context only. Aria should
+not claim to recognize a patient or pull up records from phone number alone.
 
-3. **Install dependencies:**
+## Bot Evolution
 
-   ```bash
-   uv sync
-   ```
+### `bot0.py`: Working Baseline
 
-4. **Run the bot:**
+`bot0.py` proves the complete live voice-agent path. It connects browser and
+Twilio transports to NVIDIA streaming STT, Nemotron, Gradium TTS, and the Bright
+Smile tool set.
 
-   ```bash
-   # run one or the other of these
-   uv run bot-gpt.py
-   uv run bot-nemotron.py
-   ```
+Its value is the baseline. Its limitation is that when the call feels slow or
+unreliable, it does not give enough evidence about where the problem happened.
 
-   Open [http://localhost:7860](http://localhost:7860) and click **Connect** to start talking. First launch takes ~20s while Pipecat downloads VAD and turn-detection models.
+### `bot1.py`: Measurable Latency
 
-## Deploy to Pipecat Cloud
+`bot1.py` keeps the product behavior nearly the same and adds latency logging.
+The important metrics are:
 
-Once the bot works locally, deploy to Pipecat Cloud and connect it to a Twilio phone number so anyone can call in.
+- **TTFA:** time to first audio after the caller stops speaking.
+- **TTLA:** time to last audio after the caller stops speaking.
 
-### Prerequisites
+This turns voice quality from a subjective complaint into something the team can
+compare across bot versions and scenarios.
 
-1. [Sign up for Pipecat Cloud](https://pipecat.daily.co/sign-up)
-2. Install the [Pipecat CLI](https://github.com/pipecat-ai/pipecat-cli) and log in:
+### `bot2.py`: Runtime Tuning And Fast Path
 
-   ```bash
-   uv tool install pipecat-ai-cli
-   pc cloud auth login
-   ```
+`bot2.py` adds stage-level visibility and makes voice runtime settings easier to
+tune by channel. It also introduces a narrow appointment fast path for simple,
+structured booking turns.
 
-### Configure Twilio
+The product bet is that predictable work should be faster and less fragile than
+waiting for full LLM reasoning every time. The risk is overreach, so the fast
+path stays focused and still uses the same booking tools.
 
-1. [Add credits / upgrade your Twilio account](https://twil.io/yc-hack)
+### `bot3.py`: Memory-First Front Desk
 
-2. [Buy a phone number](https://help.twilio.com/articles/223135247) with voice capability.
+`bot3.py` expands the deterministic layer into a memory-first front-desk
+processor. It handles common workflows before the LLM:
 
-3. Get your Pipecat Cloud organization name:
+- Booking with partial information.
+- Caller corrections.
+- Vague time requests and slot options.
+- Rescheduling with confirmation IDs.
+- Known insurance checks.
+- Emergency and medical-advice guardrails.
+- Unsupported cancellation requests.
 
-   ```bash
-   pc cloud organizations list
-   ```
+The LLM remains available for open-ended language. The improvement is that Aria
+does not need to rediscover basic front-desk state on every turn.
 
-4. [Create a TwiML Bin](https://www.twilio.com/docs/serverless/twiml-bins/getting-started#create-a-new-twiml-bin) with this configuration:
+## What We Optimize For
 
-   ```xml
-   <?xml version="1.0" encoding="UTF-8"?>
-   <Response>
-     <Connect>
-       <Stream url="wss://api.pipecat.daily.co/ws/twilio">
-         <Parameter name="_pipecatCloudServiceHost"
-           value="flower-bot.YOUR_ORG_NAME"/>
-       </Stream>
-     </Connect>
-   </Response>
-   ```
+The target is not the shortest possible response at any cost. The target is a
+better front-desk call. The core scorecard is:
 
-   Replace `YOUR_ORG_NAME` with the org name from step 2.
+- Higher scenario pass rate.
+- Fewer high-severity failures.
+- Lower TTFA and TTLA, especially p95.
+- Fewer infrastructure failures.
+- Correct tool-backed confirmations.
+- Safe refusals for clinical, cancellation, and privacy boundaries.
+- Better handling of corrections, partial answers, and follow-up questions.
 
-5. [Attach the TwiML Bin](https://www.twilio.com/docs/serverless/twiml-bins/getting-started#wire-your-twiml-bin-up-to-an-incoming-phone-call) to your Twilio number: Go to [your phone numbers](https://console.twilio.com/go?to=/account/__account__/us1/senders-hub/list/phone-numbers/inventory) → select your
-number → under **Voice Configuration**, set method to the **TwiML Bin** you created → Save.
+A fast bot that fails to book correctly is not a win. A correct bot that makes
+callers wait too long is also not good enough. The work is to move both curves:
+more reliable task completion and lower caller-perceived delay.
 
-6. [Optional] Use [Twilio Dev phone](https://www.twilio.com/docs/labs/dev-phone) for testing.
+## Evaluation
 
-### Review the deployment configuration
+The evaluation harness in `server/` runs scripted caller scenarios against one or
+more bot versions, then records transcripts, judge reasons, tool calls, pass
+rates, and latency metrics.
 
-Your deployment details are specified in the `pcc-deploy.toml` file. You can learn more about options in the [docs](https://docs.pipecat.ai/api-reference/cli/cloud/deploy#configuration-file-pcc-deploy-toml).
-
-### Upload secrets
+Run a small comparison:
 
 ```bash
-pc cloud secrets set flower-bot-secrets --file .env
+cd server
+uv run python batch_eval_runner.py --bots bot0.py bot1.py bot2.py bot3.py --limit 3 --max-workers 1
 ```
 
-This uploads everything from `.env` to Pipecat Cloud's secure storage. The bot reads from there at runtime, so you don't bake keys into the image.
-
-### Deploy
-
-Build and run your bot on Pipecat Cloud:
+Run a targeted scenario:
 
 ```bash
-pc cloud deploy
+cd server
+uv run python batch_eval_runner.py --bots bot2.py bot3.py --scenario medical_advice_ibuprofen --max-workers 1
 ```
 
-Learn more about [cloud builds](https://docs.pipecat.ai/pipecat-cloud/guides/cloud-builds).
+The most useful review loop is:
 
-### Call your bot
+1. Compare pass rate and p95 latency.
+2. Read failing scenario IDs and judge reasons.
+3. Inspect transcripts and tool calls.
+4. Use stage latency when the failure looks timing-related.
+5. Fix the narrowest layer that owns the failure: prompt, tool, fast path,
+   memory, VAD, transport, or eval.
 
-Dial the Twilio number you set up. 🌷
+## Local Development
 
-## Test your agent with Cekura
-
-[Cekura](https://cekura.com) tests and observes voice agents. For this hackathon, use it to **test the Pipecat bot you build in this repo** — run real conversations against it, score the transcripts, and fix what's failing before you demo.
-
-### Sign up
-
-Create your account at **[dashboard.cekura.ai](https://dashboard.cekura.ai)**. If you're approved for this hackathon, just sign up and your credits will show up automatically. If you don't see them, find someone from the Cekura team, they're on-site.
-
-### Onboarding (or skip it)
-
-On first login you'll land on a short setup flow that helps you create your first agent and test. Feel free to click through it — **or hit _Skip_** and jump straight to the dashboard if you'd rather set things up yourself. Either way takes a minute.
-
-### Recommended: start by testing your agent (via Claude Code)
-
-The fastest path — and what we recommend for the hackathon — is to drive Cekura from **Claude Code** using our MCP server + skills. You stay in your terminal, and Cekura handles agent creation, scenario generation, and running the test.
-
-**1. Install the Cekura skills + MCP** (Claude Code marketplace plugin — bundles the skills, slash commands, and auto-configured MCP server):
+The active Python project lives in `server/`.
 
 ```bash
-/plugin marketplace add cekura-ai/cekura-skills
-/plugin install cekura@cekura-skills
+cd server
+uv sync
 ```
 
-Repo: [github.com/cekura-ai/cekura-skills](https://github.com/cekura-ai/cekura-skills) · Full setup + other agents (Cursor, Codex, etc.): **[docs.cekura.ai → Claude Code guide](https://docs.cekura.ai/mcp/claude-code-guide)** and **[Skills](https://docs.cekura.ai/mcp/skills)**.
+Configure service keys in `server/.env`. At minimum, local voice runs need the
+STT, LLM, and TTS service configuration used by the selected bot.
 
-**2. Run an end-to-end test** of your agent with a single command:
+Run a bot locally:
 
+```bash
+cd server
+uv run bot3.py
 ```
-/cekura-report
+
+Then open the local WebRTC page shown by the Pipecat runner and connect from the
+browser. For phone testing, use the Twilio websocket deployment path configured
+for Pipecat Cloud.
+
+Run tests:
+
+```bash
+cd server
+uv run pytest
 ```
 
-This spins up anything from 10–20 evaluators (what Cekura calls test cases), runs scenarios against your Pipecat agent, and gives you back a full report — transcripts, scores, and what failed — so you can iterate fast.
+## Documentation Map
 
-> When connecting your agent, **select `Pipecat` as the provider.** Details: [docs.cekura.ai → Pipecat](https://docs.cekura.ai/documentation/integrations/pipecat/automated).
+For deeper implementation notes, see:
 
-## Learn more
+- `server/docs/README.md` for the detailed bot evolution narrative.
+- `server/docs/EVALUATION_TUTORIAL.md` for evaluation workflow details.
+- `server/docs/BATCH_EVALUATION_TUTORIAL.md` for batch comparisons.
+- `server/notes/latency.md` for latency-analysis notes.
 
-### Pipecat
-
-- [Pipecat Documentation](https://docs.pipecat.ai/)
-- [Pipecat Cloud Deployment](https://docs.pipecat.ai/pipecat-cloud/introduction)
-- [Pipecat Examples](https://github.com/pipecat-ai/pipecat-examples)
-- [Pipecat Discord](https://discord.gg/pipecat)
-
-### Twilio
-
-- [Twilio Developer Hub](https://www.twilio.com/en-us/developers)
-- [Twilio Documentation](https://www.twilio.com/docs)
-- [Twilio Dev phone](https://www.twilio.com/docs/labs/dev-phone)
-
-### Cekura
-
-- [Claude Code guide](https://docs.cekura.ai/mcp/claude-code-guide) — MCP + skills setup
-- [Cekura skills](https://docs.cekura.ai/mcp/skills) — all slash commands
-- [Pipecat integration](https://docs.cekura.ai/documentation/integrations/pipecat/automated)
-- [Cekura docs](https://docs.cekura.ai) · [dashboard](https://dashboard.cekura.ai)
+The root README is intentionally strategic. The detailed docs are useful when
+changing code. This file should stay focused on what we are optimizing and why.

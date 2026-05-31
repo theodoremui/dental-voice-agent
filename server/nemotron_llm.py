@@ -31,6 +31,8 @@ Mirrors aiewf-eval's ``multi_turn_eval.services.vllm_openai.VLLMOpenAILLMService
 adapted to this pipecat's ``get_chat_completions(self, context)`` signature.
 """
 
+from typing import Any
+
 from pipecat.services.openai.llm import OpenAILLMService
 
 
@@ -42,7 +44,7 @@ class VLLMOpenAILLMService(OpenAILLMService):
         super().__init__(*args, **kwargs)
         self._ttft_armed = False
 
-    async def get_chat_completions(self, context):
+    async def get_chat_completions(self, context: Any) -> Any:
         """Wrap the chunk stream to arm TTFB on the first content/tool delta.
 
         ``_process_context`` calls this once per turn, right after
@@ -50,7 +52,7 @@ class VLLMOpenAILLMService(OpenAILLMService):
         arming flag here.
         """
         self._ttft_armed = False
-        stream = await super().get_chat_completions(context)
+        stream: Any = await super().get_chat_completions(context)
 
         async def _armed_stream():
             try:
@@ -67,10 +69,12 @@ class VLLMOpenAILLMService(OpenAILLMService):
             finally:
                 # pipecat's _closing() only closes this wrapper generator; close the
                 # underlying OpenAI stream too (HTTP resource + uvloop asyncgen safety).
-                if hasattr(stream, "close"):
-                    await stream.close()
-                elif hasattr(stream, "aclose"):
-                    await stream.aclose()
+                close = getattr(stream, "close", None)
+                aclose = getattr(stream, "aclose", None)
+                if close is not None:
+                    await close()
+                elif aclose is not None:
+                    await aclose()
 
         return _armed_stream()
 

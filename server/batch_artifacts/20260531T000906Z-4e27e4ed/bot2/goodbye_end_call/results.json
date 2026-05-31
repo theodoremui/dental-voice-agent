@@ -1,0 +1,53 @@
+{
+  "run_id": "63f1c9dc",
+  "timestamp": 1780187752.926987,
+  "timestamp_iso": "2026-05-31T00:35:52Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": null,
+  "voice_latency": null,
+  "category_summary": {
+    "call_closure": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "goodbye_end_call",
+      "passed": false,
+      "reason": "The agent did not utter a goodbye or invoke end_call in the transcript.",
+      "turn_count": 1,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hi, I'd like to check the status of my recent order number 12345."
+        }
+      ],
+      "tool_calls": [],
+      "category": "call_closure",
+      "severity": "medium"
+    }
+  ],
+  "bot_url": "http://localhost:7934",
+  "voice_agent": {
+    "name": "bot2",
+    "passed_path": "bot2.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+    "sha256": "67805872122ad7f6761cc973cccd14bce68fd8002f6347de62ecb12ce2f58b52",
+    "bot_url": "http://localhost:7934",
+    "port": 7934,
+    "command": "uv run bot2.py --host localhost --port 7934",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

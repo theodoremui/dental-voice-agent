@@ -1,0 +1,49 @@
+{
+  "run_id": "2c43a6cf",
+  "timestamp": 1780178965.997313,
+  "timestamp_iso": "2026-05-30T22:09:25Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": null,
+  "voice_latency": null,
+  "category_summary": {
+    "booking": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "relative_date_this_friday",
+      "passed": false,
+      "reason": "The transcript shows no indication that the agent interpreted or acted on the relative date 'this Friday', so the required outcome was not satisfied.",
+      "turn_count": 1,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Arya. How can I help?"
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7870",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7870",
+    "port": 7870,
+    "command": "uv run bot1.py --host localhost --port 7870",
+    "batch_id": "20260530T220717Z-0bc4fad9"
+  }
+}

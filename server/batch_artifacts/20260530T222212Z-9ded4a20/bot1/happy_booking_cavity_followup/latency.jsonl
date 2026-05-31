@@ -1,0 +1,7 @@
+{"ts":1780179821.979896,"turn_id":1,"status":"interrupted","audio_frames":0,"audio_bytes":0}
+{"ts":1780179825.3727648,"turn_id":2,"status":"interrupted","audio_frames":0,"audio_bytes":0}
+{"ts":1780179829.1061702,"turn_id":3,"status":"complete","audio_frames":34,"audio_bytes":65280,"ttfa_ms":360,"ttla_ms":1682,"audio_duration_ms":1322}
+{"ts":1780179839.890673,"turn_id":4,"status":"interrupted","audio_frames":80,"audio_bytes":153600,"ttfa_ms":1012,"ttla_ms":4171,"audio_duration_ms":3159}
+{"ts":1780179844.372703,"turn_id":5,"status":"interrupted","audio_frames":0,"audio_bytes":0}
+{"ts":1780179849.389493,"turn_id":6,"status":"interrupted","audio_frames":56,"audio_bytes":107520,"ttfa_ms":772,"ttla_ms":2971,"audio_duration_ms":2200}
+{"ts":1780179875.0803342,"turn_id":7,"status":"ended","audio_frames":0,"audio_bytes":0}
