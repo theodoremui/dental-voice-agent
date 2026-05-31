@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -82,6 +82,16 @@ class ReservedPort:
 
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
         self.release()
+
+
+class PortReservation(Protocol):
+    port: int
+
+    def release(self) -> None: ...
+
+
+class PortAllocatorLike(Protocol):
+    def reserve(self) -> PortReservation: ...
 
 
 class PortAllocator:
@@ -395,7 +405,7 @@ def run_batch_task(
     task: BatchTask,
     *,
     options: EvalOptions,
-    port_allocator: PortAllocator,
+    port_allocator: PortAllocatorLike,
     startup_timeout: float,
     eval_timeout: float,
     cwd: Path = REPO_ROOT,

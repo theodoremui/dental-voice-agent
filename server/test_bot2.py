@@ -29,7 +29,9 @@ def test_twilio_sample_rate_contract(monkeypatch):
 
 
 def test_bot2_uses_default_turn_strategy_without_incomplete_filtering():
-    params = bot2.build_user_aggregator_params(vad_analyzer=object())
+    params = bot2.build_user_aggregator_params(
+        vad_analyzer=bot2.build_vad_analyzer(twilio=False, audio_in_sample_rate=16000)
+    )
 
     assert params.user_turn_strategies is None
     assert params.filter_incomplete_user_turns is False
