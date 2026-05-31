@@ -34,8 +34,8 @@ def test_spoken_tool_responses_avoid_post_tool_llm_hop():
     )
 
     assert availability == (
-        "two PM on Tuesday, June 2 is open; should I book it?"
+        "two PM on Tuesday, June 2 is open. Should I book it?"
     )
     assert booking == (
-        "Booked for Tuesday, June 2 at two thirty PM; confirmation BSD1002."
+        "You're all set for Tuesday, June 2 at two thirty PM. Your confirmation is BSD1002."
     )
