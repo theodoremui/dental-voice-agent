@@ -1,0 +1,80 @@
+{
+  "run_id": "2aa7f82f",
+  "timestamp": 1780187157.596698,
+  "timestamp_iso": "2026-05-31T00:25:57Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 1,
+  "failed_count": 0,
+  "pass_rate": 1.0,
+  "voice_p95_latency_ms": 1248,
+  "voice_latency": {
+    "ttfa_p95_ms": 1248,
+    "ttla_p95_ms": 4559
+  },
+  "category_summary": {
+    "booking": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "happy_booking_cavity_followup",
+      "passed": true,
+      "reason": "Agent booked the appointment and provided a Bright Smile Dental confirmation id.",
+      "turn_count": 7,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I\u2019d like to schedule a cavity follow\u2011up for June\u202f4,\u202f2026 at 1\u202fPM, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "May I have your name"
+        },
+        {
+          "speaker": "caller",
+          "text": "My name is Priya Shah."
+        },
+        {
+          "speaker": "agent",
+          "text": "Booked for Thursday, June four at one p.m. Confirmation BSD one zero zero two"
+        },
+        {
+          "speaker": "caller",
+          "text": "Thank you, goodbye."
+        },
+        {
+          "speaker": "agent",
+          "text": "You're welcome. Have a great day."
+        }
+      ],
+      "tool_calls": [],
+      "category": "booking",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7913",
+  "voice_agent": {
+    "name": "bot2",
+    "passed_path": "bot2.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot2.py",
+    "sha256": "67805872122ad7f6761cc973cccd14bce68fd8002f6347de62ecb12ce2f58b52",
+    "bot_url": "http://localhost:7913",
+    "port": 7913,
+    "command": "uv run bot2.py --host localhost --port 7913",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

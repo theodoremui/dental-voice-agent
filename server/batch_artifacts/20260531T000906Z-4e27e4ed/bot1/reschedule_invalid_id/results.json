@@ -1,0 +1,113 @@
+{
+  "run_id": "36d6bec0",
+  "timestamp": 1780186843.747146,
+  "timestamp_iso": "2026-05-31T00:20:43Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": 476,
+  "voice_latency": {
+    "ttfa_p95_ms": 476,
+    "ttla_p95_ms": 13457
+  },
+  "category_summary": {
+    "rescheduling": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "reschedule_invalid_id",
+      "passed": false,
+      "reason": "Judge did not return JSON. Raw output: ''",
+      "turn_count": 15,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help?"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I'd like to reschedule my appointment with confirmation BSD9999 to June 5, 2026 at 1\u202fPM."
+        },
+        {
+          "speaker": "agent",
+          "text": "What time would you like to move your appointment to on June fifth?"
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to move it to 1\u202fPM on June\u202f5,\u202f2026."
+        },
+        {
+          "speaker": "agent",
+          "text": "Sure, I can help you reschedule that appointment for June. I'm sorry I could not find that confirmation I'd the office can help look it up"
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to reschedule my appointment with confirmation BSD9999 to June\u202f5,\u202f2026 at\u202f1\u202fPM."
+        },
+        {
+          "speaker": "agent",
+          "text": "I'm unable to locate an Appointment with confirmation IDBSD nine confirmation BSD nine."
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to reschedule my appointment with confirmation BSD9999 to June\u202f5,\u202f2026 at\u202f1\u202fPM."
+        },
+        {
+          "speaker": "agent",
+          "text": "I'm sorry I could not"
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to reschedule my appointment with confirmation\u202fBSD9999 to June\u202f5,\u202f2026 at"
+        },
+        {
+          "speaker": "agent",
+          "text": "I'm unable to locate an appointment with confirmation IDBSD nine thousand nine hundred ninety nine. Could you please double check the confirmation number or contact the office directly for assistance with rescheduling? Could you please confirm your confirmation ID"
+        },
+        {
+          "speaker": "caller",
+          "text": "I\u2019d like to reschedule my appointment with confirmation\u202fBSD9999 to June\u202f5,\u202f2026 at\u202f1\u202fPM."
+        },
+        {
+          "speaker": "agent",
+          "text": "I'm unable to locate that confirmation ID. Would you like to book a new appointment for June fifth at one PM instead"
+        },
+        {
+          "speaker": "caller",
+          "text": "Yes, please go ahead and book a new appointment for June\u202f5 at\u202f1\u202fPM. Thank you."
+        },
+        {
+          "speaker": "agent",
+          "text": "I'm unable to find that. Confirmation ID. Please double check the"
+        }
+      ],
+      "tool_calls": [],
+      "category": "rescheduling",
+      "severity": "high",
+      "judge_error": true
+    }
+  ],
+  "bot_url": "http://localhost:7895",
+  "voice_agent": {
+    "name": "bot1",
+    "passed_path": "bot1.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot1.py",
+    "sha256": "9ea303806973e7a98b6ec4fd41e0f3beaa68e0322e58ac6b238fa836b8420cb4",
+    "bot_url": "http://localhost:7895",
+    "port": 7895,
+    "command": "uv run bot1.py --host localhost --port 7895",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

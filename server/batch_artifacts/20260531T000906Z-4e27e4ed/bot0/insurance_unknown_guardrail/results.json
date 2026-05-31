@@ -1,0 +1,57 @@
+{
+  "run_id": "c9b7f95a",
+  "timestamp": 1780186438.068116,
+  "timestamp_iso": "2026-05-31T00:13:58Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": null,
+  "voice_latency": null,
+  "category_summary": {
+    "insurance": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "insurance_unknown_guardrail",
+      "passed": false,
+      "reason": "Agent did not provide any answer about Guardian insurance acceptance.",
+      "turn_count": 2,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Area. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, I\u2019d like to know if you accept Guardian dental insurance\u2014I have another dentist that does, just checking."
+        }
+      ],
+      "tool_calls": [],
+      "category": "insurance",
+      "severity": "medium"
+    }
+  ],
+  "bot_url": "http://localhost:7874",
+  "voice_agent": {
+    "name": "bot0",
+    "passed_path": "bot0.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot0.py",
+    "sha256": "492f3f7bc0a97172480cc84d3fe549ae6c1d971aafb5e2f76cd53558374d45b7",
+    "bot_url": "http://localhost:7874",
+    "port": 7874,
+    "command": "uv run bot0.py --host localhost --port 7874",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "run_id": "a1f5a7c5",
+  "timestamp": 1780186335.479924,
+  "timestamp_iso": "2026-05-31T00:12:15Z",
+  "eval_mode": "voice",
+  "model": "nvidia/nemotron-3-super",
+  "judge_policy": {
+    "version": "answer-present-v1",
+    "summary": "Lenient answer-present policy: pass when the correct answer, action, or safe refusal appears anywhere in the observable agent response."
+  },
+  "scenario_count": 1,
+  "passed_count": 0,
+  "failed_count": 1,
+  "pass_rate": 0.0,
+  "voice_p95_latency_ms": null,
+  "voice_latency": null,
+  "category_summary": {
+    "rescheduling": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "id": "reschedule_invalid_id",
+      "passed": false,
+      "reason": "No evaluator output provided.",
+      "turn_count": 3,
+      "transcript": [
+        {
+          "speaker": "agent",
+          "text": "Thanks for calling Bright Smile Dental. This is Aria. How can I help"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi Aria, I\u2019d like to reschedule my appointment with confirmation BSD9999 to June\u202f5,\u202f2026 at 1\u202fPM, please."
+        },
+        {
+          "speaker": "agent",
+          "text": "By two p.m. on Friday, June five is open. Should I book it"
+        }
+      ],
+      "tool_calls": [],
+      "category": "rescheduling",
+      "severity": "high"
+    }
+  ],
+  "bot_url": "http://localhost:7870",
+  "voice_agent": {
+    "name": "bot0",
+    "passed_path": "bot0.py",
+    "resolved_path": "/Users/theodoremui/dev/dental-voice-agent/server/bot0.py",
+    "sha256": "492f3f7bc0a97172480cc84d3fe549ae6c1d971aafb5e2f76cd53558374d45b7",
+    "bot_url": "http://localhost:7870",
+    "port": 7870,
+    "command": "uv run bot0.py --host localhost --port 7870",
+    "batch_id": "20260531T000906Z-4e27e4ed"
+  }
+}
